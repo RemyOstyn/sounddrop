@@ -140,7 +140,10 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
 
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
-      <div className="glass border border-white/20 rounded-lg shadow-2xl overflow-hidden">
+      <div className="relative bg-gradient-to-br from-slate-900/80 to-gray-900/80 backdrop-blur-2xl border border-white/20 rounded-lg shadow-2xl overflow-hidden">
+        {/* Enhanced glass background overlay */}
+        <div className="absolute inset-0 bg-black/40 backdrop-blur-xl" />
+        <div className="relative z-10">
         <CommandInput
           placeholder="Search for samples, libraries, or users..."
           value={query}
@@ -281,21 +284,22 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
         </CommandList>
 
         {/* Footer */}
-        <div className="border-t border-white/10 p-3 text-xs text-white/40 flex items-center justify-between">
+        <div className="border-t border-white/15 p-3 text-xs text-white/70 flex items-center justify-between bg-black/30">
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-1">
-              <kbd className="px-1.5 py-0.5 bg-white/10 rounded text-xs">↵</kbd>
+              <kbd className="px-1.5 py-0.5 bg-slate-800/80 backdrop-blur rounded text-xs text-white border border-white/20">↵</kbd>
               <span>to select</span>
             </div>
             <div className="flex items-center space-x-1">
-              <kbd className="px-1.5 py-0.5 bg-white/10 rounded text-xs">↑↓</kbd>
+              <kbd className="px-1.5 py-0.5 bg-slate-800/80 backdrop-blur rounded text-xs text-white border border-white/20">↑↓</kbd>
               <span>to navigate</span>
             </div>
           </div>
           <div className="flex items-center space-x-1">
-            <kbd className="px-1.5 py-0.5 bg-white/10 rounded text-xs">esc</kbd>
+            <kbd className="px-1.5 py-0.5 bg-slate-800/80 backdrop-blur rounded text-xs text-white border border-white/20">esc</kbd>
             <span>to close</span>
           </div>
+        </div>
         </div>
       </div>
     </CommandDialog>
