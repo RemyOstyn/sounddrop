@@ -1,0 +1,87 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  avatar        String?
+  favorites     Favorite[]
+  libraries     Library[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([email])
+}
+
+model Category {
+  id            String    @id @default(cuid())
+  name          String    @unique
+  slug          String    @unique
+  icon          String    // Lucide icon name
+  description   String?
+  libraries     Library[]
+  order         Int       @default(0)
+  createdAt     DateTime  @default(now())
+
+  @@index([slug])
+  @@index([order])
+}
+
+model Library {
+  id            String    @id @default(cuid())
+  name          String
+  description   String?
+  iconUrl       String?   // Supabase storage URL for custom icon
+  userId        String
+  categoryId    String
+  isPublic      Boolean   @default(true)
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category      Category  @relation(fields: [categoryId], references: [id])
+  samples       Sample[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([categoryId])
+  @@index([isPublic])
+}
+
+model Sample {
+  id            String    @id @default(cuid())
+  name          String
+  fileUrl       String    // Supabase storage URL
+  duration      Float     // in seconds
+  fileSize      Int       // in bytes
+  mimeType      String
+  libraryId     String
+  library       Library   @relation(fields: [libraryId], references: [id], onDelete: Cascade)
+  playCount     Int       @default(0)
+  favorites     Favorite[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([libraryId])
+  @@index([playCount])
+  @@index([createdAt])
+}
+
+model Favorite {
+  id            String    @id @default(cuid())
+  userId        String
+  sampleId      String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sample        Sample    @relation(fields: [sampleId], references: [id], onDelete: Cascade)
+  createdAt     DateTime  @default(now())
+  
+  @@unique([userId, sampleId])
+  @@index([userId])
+  @@index([sampleId])
+}

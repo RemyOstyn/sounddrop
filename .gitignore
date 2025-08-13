@@ -39,3 +39,20 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# prisma
+/prisma/migrations/
+/prisma/dev.db*
+
+# public uploads (dev only)
+/public/sounds/
+/public/uploads/
+
+# IDE
+.vscode/
+.idea/
+
+# OS generated files
+Thumbs.db
+.DS_Store
+.DS_Store?
