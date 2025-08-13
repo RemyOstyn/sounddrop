@@ -24,13 +24,18 @@
     "@supabase/supabase-js": "^2.55.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "cmdk": "^1.1.1",
+    "framer-motion": "^12.23.12",
     "lucide-react": "^0.539.0",
     "next": "15.4.6",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-hook-form": "^7.62.0",
+    "react-intersection-observer": "^9.16.0",
     "tailwind-merge": "^3.3.1",
-    "zod": "^4.0.17"
+    "wavesurfer.js": "^7.10.1",
+    "zod": "^4.0.17",
+    "zustand": "^5.0.7"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

@@ -138,6 +138,8 @@ export type SampleFilters = {
   search?: string
   userId?: string
   isFavorited?: boolean
+  sortBy?: SampleSortField
+  sortOrder?: SortOrder
 }
 
 export type LibraryFilters = {
