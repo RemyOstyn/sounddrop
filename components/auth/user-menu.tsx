@@ -8,13 +8,16 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
+import { useUserSettings } from '@/hooks/use-user-settings';
+import { getUserDisplayName, getUserInitials } from '@/lib/user-display-utils';
 
 interface UserMenuProps {
   className?: string;
 }
 
 export function UserMenu({ className }: UserMenuProps) {
-  const { user, userName, userEmail, userInitials, userAvatar, signOut } = useAuth(); // Removed unused 'isLoading'
+  const { user, userAvatar, signOut } = useAuth();
+  const { settings } = useUserSettings();
   const [isOpen, setIsOpen] = useState(false);
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -61,6 +64,11 @@ export function UserMenu({ className }: UserMenuProps) {
   }, [isOpen]);
 
   if (!user) return null;
+
+  // Get display values from database settings or fallback to email
+  const userName = settings ? getUserDisplayName(settings) : (user.email?.split('@')[0] || 'User');
+  const userInitials = settings ? getUserInitials(settings) : (user.email?.[0]?.toUpperCase() || '?');
+  const userEmail = user.email || '';
 
   const handleSignOut = async () => {
     setIsOpen(false);
@@ -192,13 +200,11 @@ export function UserMenu({ className }: UserMenuProps) {
                 {/* Divider */}
                 <div className="my-2 border-t border-white/10" />
                 
-                {/* Future: Settings */}
-                <MenuButton
+                <MenuLink
+                  href="/settings"
                   icon={Settings}
                   label="Settings"
                   onClick={() => setIsOpen(false)}
-                  disabled
-                  className="opacity-50"
                 />
                 
                 <MenuButton

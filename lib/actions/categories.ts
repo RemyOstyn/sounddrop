@@ -56,7 +56,8 @@ export async function getCategoryWithLibraries(
             user: {
               select: {
                 id: true,
-                name: true,
+                username: true,
+                displayName: true,
                 avatar: true
               }
             },
@@ -91,7 +92,8 @@ export async function getCategoriesWithStats(): Promise<CategoryWithStats[]> {
             user: {
               select: {
                 id: true,
-                name: true,
+                username: true,
+                displayName: true,
                 avatar: true
               }
             },
@@ -204,7 +206,8 @@ export async function getCategoryLibraries(
           user: {
             select: {
               id: true,
-              name: true,
+              username: true,
+              displayName: true,
               avatar: true
             }
           },

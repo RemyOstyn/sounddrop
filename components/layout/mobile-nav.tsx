@@ -8,7 +8,7 @@ import {
   TrendingUp, 
   Search, 
   Heart, 
-  User,
+  Settings,
   Plus
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -24,7 +24,7 @@ const navItems = [
   { icon: TrendingUp, label: 'Trending', href: '/trending' },
   { icon: Search, label: 'Search', href: '/search' },
   { icon: Heart, label: 'Favorites', href: '/favorites', protected: true },
-  { icon: User, label: 'Profile', href: '/profile', protected: true },
+  { icon: Settings, label: 'Settings', href: '/settings', protected: true },
 ];
 
 export function MobileNav({ className }: MobileNavProps) {

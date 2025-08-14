@@ -6,6 +6,7 @@ import { Heart, Grid3X3, List, Search, Filter, Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useFavorites } from '@/hooks/use-favorites';
 import { SampleCard } from '@/components/audio/sample-card';
+import { getUserDisplayName } from '@/lib/user-display-utils';
 
 export default function FavoritesPage() {
   const { userName } = useAuth();
@@ -21,7 +22,7 @@ export default function FavoritesPage() {
     return favorites.filter(favorite => 
       favorite.sample.name.toLowerCase().includes(query) ||
       favorite.sample.library.name.toLowerCase().includes(query) ||
-      favorite.sample.library.user.name?.toLowerCase().includes(query) ||
+      getUserDisplayName(favorite.sample.library.user).toLowerCase().includes(query) ||
       favorite.sample.library.category.name.toLowerCase().includes(query)
     );
   }, [favorites, searchQuery]);

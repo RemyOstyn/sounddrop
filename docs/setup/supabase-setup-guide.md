@@ -201,6 +201,23 @@ npx prisma db push
 - Check that Google+ API is enabled in Google Cloud Console
 - Ensure your domain is added to Google Cloud Console authorized domains
 
+**502 Bad Gateway on Login Callback:**
+If you encounter 502 errors during OAuth callback, it's likely due to large headers from OAuth providers. This requires Nginx configuration updates on your server:
+
+```nginx
+large_client_header_buffers 4 16k;
+proxy_connect_timeout 60s;
+proxy_send_timeout 60s;
+proxy_read_timeout 60s;
+send_timeout 60s;
+proxy_buffer_size   128k;
+proxy_buffers       4 256k;
+proxy_busy_buffers_size 256k;
+client_max_body_size 10M;
+```
+
+Reference: [Supabase Discussion #29211](https://github.com/orgs/supabase/discussions/29211)
+
 **Storage Upload Issues:**
 - Verify bucket policies are correctly set up
 - Check file size and MIME type restrictions

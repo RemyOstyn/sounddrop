@@ -15,17 +15,10 @@ export const useAuth = () => {
   const refreshSession = useAuthStore((state) => state.refreshSession);
   const clearError = useAuthStore((state) => state.clearError);
 
-  // Computed properties
-  const userInitials = user?.user_metadata?.full_name
-    ?.split(' ')
-    .map((name) => name[0])
-    .join('')
-    .toUpperCase() || user?.email?.[0]?.toUpperCase() || '?';
-
+  // Computed properties - privacy-focused (simplified for now)
+  const userName = user?.email?.split('@')[0] || 'User'; // Use email prefix as display
+  const userInitials = user?.email?.[0]?.toUpperCase() || '?';
   const userAvatar = user?.user_metadata?.picture || user?.user_metadata?.avatar_url;
-  
-  const userName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email || 'User';
-  
   const userEmail = user?.email || '';
 
   return {

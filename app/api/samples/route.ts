@@ -41,7 +41,10 @@ export async function GET(request: NextRequest) {
         {
           library: {
             user: {
-              name: { contains: search, mode: 'insensitive' }
+              OR: [
+                { username: { contains: search, mode: 'insensitive' } },
+                { displayName: { contains: search, mode: 'insensitive' } }
+              ]
             }
           }
         }
@@ -66,7 +69,8 @@ export async function GET(request: NextRequest) {
               user: {
                 select: {
                   id: true,
-                  name: true,
+                  username: true,
+                  displayName: true,
                   avatar: true
                 }
               },

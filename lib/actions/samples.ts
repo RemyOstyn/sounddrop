@@ -114,7 +114,8 @@ export async function getSamples({
               user: {
                 select: {
                   id: true,
-                  name: true,
+                  username: true,
+                displayName: true,
                   avatar: true
                 }
               },
@@ -210,7 +211,8 @@ export async function getTrendingSamples({
               user: {
                 select: {
                   id: true,
-                  name: true,
+                  username: true,
+                displayName: true,
                   avatar: true
                 }
               },
@@ -259,7 +261,8 @@ export async function getSampleById(id: string): Promise<SampleWithDetails | nul
             user: {
               select: {
                 id: true,
-                name: true,
+                username: true,
+                displayName: true,
                 avatar: true
               }
             },
@@ -334,7 +337,8 @@ export async function getUserFavorites({
                   user: {
                     select: {
                       id: true,
-                      name: true,
+                      username: true,
+                displayName: true,
                       avatar: true
                     }
                   },
@@ -436,7 +440,8 @@ export async function getRecentSamples(limit: number = 10): Promise<SampleWithDe
             user: {
               select: {
                 id: true,
-                name: true,
+                username: true,
+                displayName: true,
                 avatar: true
               }
             },

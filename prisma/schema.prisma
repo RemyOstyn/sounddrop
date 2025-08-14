@@ -11,7 +11,9 @@ datasource db {
 model User {
   id            String    @id @default(cuid())
   email         String    @unique
-  name          String?
+  name          String?   // Deprecated: kept for migration, will be removed
+  username      String    @unique // Public identifier (3-30 chars, alphanumeric + underscores)
+  displayName   String?   // Optional friendly display name
   avatar        String?
   favorites     Favorite[]
   libraries     Library[]
@@ -19,6 +21,7 @@ model User {
   updatedAt     DateTime  @updatedAt
 
   @@index([email])
+  @@index([username])
 }
 
 model Category {

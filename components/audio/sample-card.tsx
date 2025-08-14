@@ -8,6 +8,7 @@ import { AudioVisualizer, MiniVisualizer } from './audio-visualizer';
 import { useAudio, usePlayTracking } from '@/hooks/use-audio';
 import { SampleWithDetails } from '@/types/database';
 import { cn } from '@/lib/utils';
+import { getUserDisplayName } from '@/lib/user-display-utils';
 
 interface SampleCardProps {
   sample: SampleWithDetails;
@@ -111,7 +112,7 @@ export function SampleCard({
               {sample.name}
             </h3>
             <p className="text-xs text-white/60 truncate">
-              {sample.library.user.name} • {sample.library.name}
+              {getUserDisplayName(sample.library.user)} • {sample.library.name}
             </p>
             {sample.library.category && (
               <p className="text-xs text-white/40 truncate mt-0.5">
@@ -291,7 +292,7 @@ function ListSampleCard({
               {sample.name}
             </h3>
             <p className="text-xs text-white/60 truncate">
-              {sample.library.user.name} • {sample.library.name}
+              {getUserDisplayName(sample.library.user)} • {sample.library.name}
             </p>
           </div>
           

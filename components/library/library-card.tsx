@@ -25,6 +25,7 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
+import { getUserDisplayName } from '@/lib/user-display-utils';
 
 interface LibraryCardProps {
   library: LibraryWithDetails;
@@ -99,7 +100,7 @@ function LibraryCardComponent({
                     
                     <div className="flex items-center space-x-1">
                       <Users size={12} />
-                      <span>{library.user.name}</span>
+                      <span>{getUserDisplayName(library.user)}</span>
                     </div>
                     
                     <div className="flex items-center space-x-1">
@@ -271,7 +272,7 @@ function LibraryCardComponent({
             
             <div className="flex items-center space-x-1 mt-2 text-xs text-white/60">
               <Users size={12} />
-              <span>by {library.user.name}</span>
+              <span>by {getUserDisplayName(library.user)}</span>
             </div>
           </div>
         </CardContent>

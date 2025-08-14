@@ -12,6 +12,7 @@ import { LoadingSpinner } from '@/components/shared/skeleton-loader';
 import { useCategory } from '@/hooks/use-category';
 import { useAudio, usePlayTracking } from '@/hooks/use-audio';
 import { cn } from '@/lib/utils';
+import { getUserDisplayName } from '@/lib/user-display-utils';
 
 interface CategoryPageProps {
   params: Promise<{ slug: string }>;
@@ -131,16 +132,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
               trendingSamples.map((sample, i) => (
                 <TrendingSampleCard
                   key={sample.id}
-                  sample={{
-                    ...sample,
-                    library: {
-                      ...sample.library,
-                      iconUrl: sample.library.iconUrl || undefined,
-                      user: {
-                        name: sample.library.user.name || 'Anonymous'
-                      }
-                    }
-                  }}
+                  sample={sample}
                   rank={i + 1}
                   maxPlayCount={Math.max(...trendingSamples.map(s => s.playCount))}
                   delay={i * 0.1}
@@ -273,9 +265,10 @@ function TrendingSampleCard({
     playCount: number;
     library: {
       name: string;
-      iconUrl?: string | undefined;
+      iconUrl: string | null;
       user: {
-        name: string;
+        username: string;
+        displayName: string | null;
       };
     };
   };
@@ -366,7 +359,7 @@ function TrendingSampleCard({
         </div>
       </div>
       <div className="text-xs text-white/40 mb-2">
-        by {sample.library.user.name}
+        by {getUserDisplayName(sample.library.user)}
       </div>
       
       {/* Audio Visualizer */}

@@ -2,7 +2,9 @@
 export type User = {
   id: string
   email: string
-  name: string | null
+  name: string | null // Deprecated: kept for migration
+  username: string // Public identifier
+  displayName: string | null // Optional friendly name
   avatar: string | null
   createdAt: Date
   updatedAt: Date
@@ -60,7 +62,7 @@ export type UserWithRelations = User & {
 
 export type CategoryWithLibraries = Category & {
   libraries: (Library & {
-    user: Pick<User, 'id' | 'name' | 'avatar'>
+    user: Pick<User, 'id' | 'username' | 'displayName' | 'avatar'>
     _count: {
       samples: number
     }
@@ -68,7 +70,7 @@ export type CategoryWithLibraries = Category & {
 }
 
 export type LibraryWithDetails = Library & {
-  user: Pick<User, 'id' | 'name' | 'avatar'>
+  user: Pick<User, 'id' | 'username' | 'displayName' | 'avatar'>
   category: Category
   samples: Sample[]
   _count: {
@@ -78,7 +80,7 @@ export type LibraryWithDetails = Library & {
 
 export type SampleWithDetails = Sample & {
   library: Library & {
-    user: Pick<User, 'id' | 'name' | 'avatar'>
+    user: Pick<User, 'id' | 'username' | 'displayName' | 'avatar'>
     category: Category
   }
   favorites: Favorite[]
@@ -90,7 +92,7 @@ export type SampleWithDetails = Sample & {
 export type FavoriteWithSample = Favorite & {
   sample: Sample & {
     library: Library & {
-      user: Pick<User, 'id' | 'name' | 'avatar'>
+      user: Pick<User, 'id' | 'username' | 'displayName' | 'avatar'>
       category: Category
     }
   }
