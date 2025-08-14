@@ -13,7 +13,8 @@ export async function GET(request: NextRequest) {
   // Handle OAuth errors
   if (error) {
     console.error('OAuth error:', error, errorDescription);
-    const loginUrl = new URL('/login', request.url);
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin;
+    const loginUrl = new URL('/login', baseUrl);
     loginUrl.searchParams.set('error', errorDescription || error);
     return NextResponse.redirect(loginUrl);
   }
@@ -21,7 +22,8 @@ export async function GET(request: NextRequest) {
   // Handle missing authorization code
   if (!code) {
     console.error('Missing authorization code');
-    const loginUrl = new URL('/login', request.url);
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin;
+    const loginUrl = new URL('/login', baseUrl);
     loginUrl.searchParams.set('error', 'Authorization code not received');
     return NextResponse.redirect(loginUrl);
   }
@@ -57,22 +59,25 @@ export async function GET(request: NextRequest) {
 
     if (exchangeError) {
       console.error('Session exchange error:', exchangeError);
-      const loginUrl = new URL('/login', request.url);
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin;
+    const loginUrl = new URL('/login', baseUrl);
       loginUrl.searchParams.set('error', exchangeError.message);
       return NextResponse.redirect(loginUrl);
     }
 
     if (!session) {
       console.error('No session received after code exchange');
-      const loginUrl = new URL('/login', request.url);
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin;
+    const loginUrl = new URL('/login', baseUrl);
       loginUrl.searchParams.set('error', 'Failed to establish session');
       return NextResponse.redirect(loginUrl);
     }
 
     console.log('Auth callback success for user:', session.user.email);
 
-    // Create the redirect URL
-    const redirectUrl = new URL(redirectTo, request.url);
+    // Create the redirect URL using production base URL
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin;
+    const redirectUrl = new URL(redirectTo, baseUrl);
     
     // Optional: Add success message
     if (redirectTo === '/') {
@@ -83,7 +88,8 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Auth callback error:', error);
-    const loginUrl = new URL('/login', request.url);
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin;
+    const loginUrl = new URL('/login', baseUrl);
     loginUrl.searchParams.set('error', 'Authentication failed. Please try again.');
     return NextResponse.redirect(loginUrl);
   }
