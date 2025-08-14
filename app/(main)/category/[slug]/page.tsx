@@ -1,14 +1,13 @@
 'use client';
 
-import { useState, useEffect, use } from 'react';
+import { useEffect, useState, use } from 'react';
 import { notFound } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Volume2, Users, Library, TrendingUp } from 'lucide-react';
 import { SampleGrid } from '@/components/audio/sample-grid';
 import { ViewToggle, useViewToggle } from '@/components/shared/view-toggle';
 import { LoadingSpinner } from '@/components/shared/skeleton-loader';
-import { DEFAULT_CATEGORIES } from '@/lib/constants';
-import { Category } from '@/types/database';
+import { useCategory } from '@/hooks/use-category';
 import { cn } from '@/lib/utils';
 
 interface CategoryPageProps {
@@ -17,33 +16,17 @@ interface CategoryPageProps {
 
 export default function CategoryPage({ params }: CategoryPageProps) {
   const { view, setView } = useViewToggle();
-  const [category, setCategory] = useState<Category | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { category, stats, trendingSamples, isLoading, error, fetchCategory } = useCategory();
 
   // Unwrap params using React.use()
   const resolvedParams = use(params);
 
-  // Find category from constants (in real app, this would be from API)
+  // Fetch category data from API
   useEffect(() => {
-    const foundCategory = DEFAULT_CATEGORIES.find(cat => cat.slug === resolvedParams.slug);
-    
-    if (foundCategory) {
-      setCategory({
-        id: foundCategory.slug,
-        name: foundCategory.name,
-        slug: foundCategory.slug,
-        icon: foundCategory.icon,
-        description: `Discover amazing ${foundCategory.name.toLowerCase()} samples`,
-        order: 0,
-        createdAt: new Date()
-      });
-    } else {
-      setError('Category not found');
+    if (resolvedParams.slug) {
+      fetchCategory(resolvedParams.slug);
     }
-    
-    setIsLoading(false);
-  }, [resolvedParams.slug]);
+  }, [resolvedParams.slug, fetchCategory]);
 
   if (isLoading) {
     return (
@@ -53,8 +36,17 @@ export default function CategoryPage({ params }: CategoryPageProps) {
     );
   }
 
-  if (error || !category) {
+  if (error) {
     notFound();
+  }
+
+  // Guard clause: don't render if we don't have category data yet
+  if (!category) {
+    return (
+      <div className="min-h-full flex items-center justify-center">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
   }
 
   return (
@@ -92,20 +84,23 @@ export default function CategoryPage({ params }: CategoryPageProps) {
               <CategoryStat
                 icon={<Volume2 size={16} />}
                 label="Total Samples"
-                value="1,247"
+                value={stats?.sampleCount?.toLocaleString() || (isLoading ? "..." : "0")}
                 gradient="from-purple-500 to-pink-500"
+                isLoading={isLoading}
               />
               <CategoryStat
                 icon={<Library size={16} />}
                 label="Libraries"
-                value="89"
+                value={stats?.libraryCount?.toLocaleString() || (isLoading ? "..." : "0")}
                 gradient="from-blue-500 to-cyan-500"
+                isLoading={isLoading}
               />
               <CategoryStat
                 icon={<Users size={16} />}
                 label="Contributors"
-                value="234"
+                value={stats?.contributorCount?.toLocaleString() || (isLoading ? "..." : "0")}
                 gradient="from-green-500 to-emerald-500"
+                isLoading={isLoading}
               />
             </div>
           </motion.div>
@@ -127,37 +122,74 @@ export default function CategoryPage({ params }: CategoryPageProps) {
             </h2>
           </motion.div>
 
-          {/* Quick trending preview - would be actual trending samples */}
+          {/* Trending samples from database */}
           <div className="flex space-x-3 overflow-x-auto pb-4">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: i * 0.1 }}
-                className="flex-shrink-0 w-48 glass glass-hover rounded-lg p-4"
-              >
-                <div className="flex items-center space-x-3 mb-3">
-                  <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center text-white font-bold text-sm">
-                    {i}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium text-white truncate text-sm">
-                      Sample {i}
+            {trendingSamples.length > 0 ? (
+              trendingSamples.map((sample, i) => (
+                <motion.div
+                  key={sample.id}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: i * 0.1 }}
+                  className="flex-shrink-0 w-48 glass glass-hover rounded-lg p-4 cursor-pointer"
+                >
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center text-white font-bold text-sm">
+                      {i + 1}
                     </div>
-                    <div className="text-xs text-white/50">
-                      {Math.floor(Math.random() * 1000)} plays
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-white truncate text-sm">
+                        {sample.name}
+                      </div>
+                      <div className="text-xs text-white/50">
+                        {sample.playCount} plays
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="h-6 bg-white/5 rounded overflow-hidden">
-                  <div 
-                    className="h-full bg-gradient-primary opacity-60"
-                    style={{ width: `${60 + Math.random() * 40}%` }}
-                  />
-                </div>
-              </motion.div>
-            ))}
+                  <div className="text-xs text-white/40 mb-2">
+                    by {sample.library.user.name}
+                  </div>
+                  <div className="h-6 bg-white/5 rounded overflow-hidden">
+                    <div 
+                      className="h-full bg-gradient-primary opacity-60"
+                      style={{ width: `${Math.min(100, (sample.playCount / Math.max(...trendingSamples.map(s => s.playCount))) * 100)}%` }}
+                    />
+                  </div>
+                </motion.div>
+              ))
+            ) : (
+              // Loading or empty state
+              Array.from({ length: 3 }).map((_, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: i * 0.1 }}
+                  className="flex-shrink-0 w-48 glass rounded-lg p-4"
+                >
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center">
+                      {isLoading ? (
+                        <div className="w-3 h-3 bg-white/20 rounded animate-pulse" />
+                      ) : (
+                        <span className="text-white/40 text-sm">—</span>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className={cn(
+                        "h-3 bg-white/10 rounded mb-1",
+                        isLoading && "animate-pulse"
+                      )} />
+                      <div className={cn(
+                        "h-2 bg-white/5 rounded w-16",
+                        isLoading && "animate-pulse"
+                      )} />
+                    </div>
+                  </div>
+                  <div className="h-6 bg-white/5 rounded" />
+                </motion.div>
+              ))
+            )}
           </div>
         </div>
       </section>
@@ -207,12 +239,14 @@ function CategoryStat({
   icon,
   label,
   value,
-  gradient
+  gradient,
+  isLoading
 }: {
   icon: React.ReactNode;
   label: string;
   value: string;
   gradient: string;
+  isLoading?: boolean;
 }) {
   return (
     <div className="glass rounded-lg p-4 flex items-center space-x-3">
@@ -223,7 +257,12 @@ function CategoryStat({
         {icon}
       </div>
       <div>
-        <div className="text-lg font-semibold text-white">{value}</div>
+        <div className={cn(
+          "text-lg font-semibold text-white",
+          isLoading && "animate-pulse"
+        )}>
+          {value}
+        </div>
         <div className="text-sm text-white/60">{label}</div>
       </div>
     </div>
