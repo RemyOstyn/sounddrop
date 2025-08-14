@@ -59,6 +59,8 @@ export const useAuthStore = create<AuthState>()(
               access_type: 'offline',
               prompt: 'consent',
             },
+            skipBrowserRedirect: false,
+            scopes: 'openid email profile',
           },
         });
 
