@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Upload, Music, AlertCircle, CheckCircle, Clock } from 'lucide-react';
+import { Upload, Music, AlertCircle, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,7 +12,6 @@ import { UploadProgress } from '@/components/upload/upload-progress';
 import { useAuth } from '@/hooks/use-auth';
 import { useLibraries } from '@/hooks/use-libraries';
 import { useUpload } from '@/hooks/use-upload';
-import { formatRateLimitReset } from '@/lib/upload-utils';
 import { toast } from 'sonner';
 
 interface AudioFile {
@@ -34,7 +33,7 @@ interface UploadItem {
 export default function UploadPage() {
   const { user, userName } = useAuth();
   const { libraries, fetchLibraries } = useLibraries();
-  const { isUploading, error, uploadAudio, rateLimitInfo } = useUpload();
+  const { isUploading, error, uploadAudio } = useUpload();
   
   const [selectedLibrary, setSelectedLibrary] = useState<string>('');
   const [audioFiles, setAudioFiles] = useState<AudioFile[]>([]);
@@ -47,7 +46,7 @@ export default function UploadPage() {
     if (user?.id) {
       fetchLibraries({ userId: user.id });
     }
-  }, [user?.id]); // Only run when user is available
+  }, [user?.id, fetchLibraries]); // Include fetchLibraries in dependency array per ESLint rule
 
   const userLibraries = libraries; // In real implementation, filter by current user
 
@@ -75,11 +74,7 @@ export default function UploadPage() {
       return;
     }
 
-    // Check rate limit
-    if (rateLimitInfo?.isLimited) {
-      toast.error(`Upload limit exceeded. Try again in ${formatRateLimitReset(rateLimitInfo.resetTime)}`);
-      return;
-    }
+    // No rate limits
 
     // Create upload items
     const newUploads: UploadItem[] = audioFiles
@@ -93,7 +88,7 @@ export default function UploadPage() {
 
     setUploads(newUploads);
 
-    // Upload files sequentially to respect rate limits
+    // Upload files sequentially
     for (let i = 0; i < newUploads.length; i++) {
       const uploadItem = newUploads[i];
       
@@ -148,7 +143,7 @@ export default function UploadPage() {
 
     // Clear audio files after upload attempt
     setAudioFiles([]);
-  }, [selectedLibrary, audioFiles, rateLimitInfo, uploadAudio, error]);
+  }, [selectedLibrary, audioFiles, uploadAudio, error]);
 
   const validAudioFiles = audioFiles.filter(file => !file.error);
   const completedUploads = uploads.filter(u => u.status === 'success').length;
@@ -176,19 +171,9 @@ export default function UploadPage() {
           </div>
 
           {/* Rate Limit Info */}
-          {rateLimitInfo && (
-            <div className={`flex items-center space-x-6 text-sm ${
-              rateLimitInfo.isLimited ? 'text-red-400' : 'text-white/60'
-            }`}>
-              <div className="flex items-center space-x-1">
-                <Clock size={14} />
-                <span>{rateLimitInfo.remaining} uploads remaining</span>
-              </div>
-              {rateLimitInfo.isLimited && (
-                <span>Resets in {formatRateLimitReset(rateLimitInfo.resetTime)}</span>
-              )}
-            </div>
-          )}
+          <div className="text-sm text-white/60">
+            <span>✨ Unlimited uploads available</span>
+          </div>
         </motion.div>
 
         {/* Main Content */}
@@ -269,7 +254,7 @@ export default function UploadPage() {
               {/* File Upload */}
               <AudioDropzone
                 onFilesAdded={handleFilesAdded}
-                disabled={!selectedLibrary || rateLimitInfo?.isLimited}
+                disabled={!selectedLibrary}
               />
 
               {/* Selected Files */}

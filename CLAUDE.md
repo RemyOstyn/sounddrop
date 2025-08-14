@@ -64,6 +64,12 @@ npm run db:reset       # Reset database (dev only)
 - **Constants**: App-wide configuration in `/lib/constants.ts`
 - **Type Safety**: Comprehensive type definitions for all data models and API responses
 
+### State Management Architecture (Zustand)
+- **Audio Store**: Multi-sample playback state with Web Audio API integration
+- **Auth Store**: User session management with real-time Supabase listener
+- **Persistent State**: LocalStorage integration for user preferences
+- **Type Safety**: Strict TypeScript interfaces for all store state
+
 ## Key Concepts
 
 ### Data Model Hierarchy
@@ -82,8 +88,15 @@ Category (pre-defined)
 
 ### Authentication States
 - **Unauthenticated**: Can browse and play all public content
-- **Authenticated**: Can favorite, upload, create libraries
+- **Authenticated**: Can favorite, upload, create libraries, manage personal content
 - **Session Management**: Automatic refresh via middleware on all routes
+
+### UI Design System
+- **Theme**: Dark mode with glassmorphism effects and backdrop blur
+- **Color Palette**: Purple-to-pink primary gradients, blue-to-cyan secondary, deep blacks with subtle blue undertones
+- **Animations**: Framer Motion throughout with smooth transitions and micro-interactions
+- **Typography**: Responsive scaling with mobile-first approach
+- **Components**: iOS-inspired interface with premium visual effects
 
 ## Implementation Status
 
@@ -95,11 +108,32 @@ Category (pre-defined)
 - Type definitions for all entities
 - Development tooling and scripts
 
-**🚧 Phase 2 NEXT**: Core browsing and audio playback
-- Layout with sidebar navigation
-- Sample browsing pages by category/library
-- Audio player component with play tracking
-- Search functionality
+**✅ Phase 2 COMPLETED**: Core Browsing & Audio Playback
+- Stunning iOS-inspired glassmorphism interface with dark theme
+- Multi-sample audio playback with Web Audio API integration
+- Visual waveforms with real-time canvas-based audio visualization
+- Infinite scroll sample grid with optimized performance
+- Command palette search with real-time suggestions
+- Mobile-first responsive design with iOS-style navigation
+- Trending algorithm based on 24-hour play count weighting
+
+**✅ Phase 3 COMPLETED**: Authentication System
+- Google OAuth integration via Supabase Auth
+- Zustand-powered auth state management with real-time updates
+- Beautiful glassmorphic auth components matching app design
+- User menu with profile display and session management
+- Protected routes with automatic redirect handling
+- Complete favorites system with CRUD operations and optimistic updates
+- Cross-browser session sync and security best practices
+
+**✅ Phase 4 COMPLETED**: User Features & Upload System
+- Library management with custom icon uploads
+- Complete audio sample upload system with drag & drop interface
+- Rate limiting (10 uploads/hour) and comprehensive file validation
+- My Libraries page with create/edit/delete functionality
+- Upload page with progress tracking and batch upload support
+- Real-time library and sample management
+- Full integration with Supabase Storage for audio and icons
 
 ## Environment Setup
 
@@ -124,6 +158,37 @@ npm run db:studio   # Visual database browser
 
 ## File Structure Patterns
 
+### Application Architecture
+```
+app/
+├── (main)/              # Public pages (home, category, trending)
+├── (auth)/              # Authentication pages (login, logout)
+├── (protected)/         # Authenticated user pages (favorites, libraries, upload)
+└── api/                 # REST API routes with proper auth validation
+```
+
+### Component Organization
+```
+components/
+├── audio/               # Audio playback and visualization components
+├── auth/                # Authentication UI components
+├── layout/              # Navigation and layout components
+├── library/             # Library management components
+├── shared/              # Reusable UI components
+├── ui/                  # shadcn/ui base components
+└── upload/              # File upload components
+```
+
+### State Management
+```
+lib/stores/
+├── audio-store.ts       # Multi-sample audio playback state
+└── auth-store.ts        # User authentication and session state
+
+hooks/
+├── use-*.ts             # Custom hooks for data fetching and state management
+```
+
 ### Supabase Integration
 - Client utilities in `/lib/supabase/` (client, server, middleware)
 - Type definitions in `/types/supabase.ts`
@@ -135,4 +200,33 @@ npm run db:studio   # Visual database browser
 - Type definitions in `/types/database.ts`
 - Utilities for validation, formatting in `/lib/utils.ts`
 
-Refer to `/docs/prd/sounddrop-prd.md` for complete product requirements and `/docs/plans/phase-1-plan.md` for infrastructure implementation details.
+## Current Application Features
+
+**🎵 Audio System**:
+- Multi-sample simultaneous playback
+- Real-time waveform visualization with Canvas API
+- Volume control and audio processing with Web Audio API
+- Play count tracking for trending algorithm
+
+**🔐 Authentication**:
+- Google OAuth via Supabase Auth
+- Protected routes with automatic redirects
+- User profile management and session persistence
+
+**📚 Content Management**:
+- Browse samples by category and library
+- Infinite scroll with optimized virtual rendering
+- Real-time search with debounced queries
+- Trending algorithm based on 24-hour play activity
+
+**👤 User Features**:
+- Favorites system with optimistic updates
+- Create and manage custom libraries with icons
+- Upload audio samples with drag & drop interface
+- Rate limiting and comprehensive file validation
+
+**📱 Mobile Experience**:
+- iOS-inspired interface with glassmorphism
+- Touch-optimized navigation and controls
+- Responsive design across all device sizes
+- Dark theme with premium visual effects

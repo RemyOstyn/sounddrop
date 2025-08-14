@@ -50,7 +50,7 @@ export function ViewToggle({
           className="absolute inset-y-1 bg-white/10 rounded-md"
           layout
           animate={{
-            x: view === 'grid' ? 4 : 44,
+            x: view === 'grid' ? 0 : 36,
             width: 36
           }}
           transition={{ type: 'spring', stiffness: 300, damping: 30 }}

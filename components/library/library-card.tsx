@@ -2,6 +2,7 @@
 
 import { useState, memo } from 'react';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 import { 
   MoreVertical, 
   Music, 
@@ -60,9 +61,11 @@ function LibraryCardComponent({
             {/* Icon */}
             <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center flex-shrink-0 overflow-hidden">
               {library.iconUrl && !imageError ? (
-                <img
+                <Image
                   src={library.iconUrl}
                   alt={library.name}
+                  width={64}
+                  height={64}
                   className="w-full h-full object-cover"
                   onError={() => setImageError(true)}
                 />
@@ -181,9 +184,10 @@ function LibraryCardComponent({
             onClick={onClick}
           >
             {library.iconUrl && !imageError ? (
-              <img
+              <Image
                 src={library.iconUrl}
                 alt={library.name}
+                fill
                 className="w-full h-full object-cover"
                 onError={() => setImageError(true)}
               />

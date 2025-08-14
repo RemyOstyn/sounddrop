@@ -200,9 +200,9 @@ function TabNavigation({
           key={tab.id}
           onClick={() => onTabChange(tab.id)}
           className={cn(
-            'relative flex items-center space-x-2 px-4 py-2 rounded-md transition-colors duration-200 text-sm font-medium',
+            'relative flex items-center px-4 py-2 rounded-md transition-colors duration-200 text-sm font-medium',
             activeTab === tab.id
-              ? 'text-white bg-white/10'
+              ? 'text-white'
               : 'text-white/60 hover:text-white/80 hover:bg-white/5'
           )}
           whileTap={{ scale: 0.98 }}
@@ -212,7 +212,7 @@ function TabNavigation({
               layoutId="activeTab"
               className="absolute inset-0 bg-white/10 rounded-md"
               initial={false}
-              transition={{ duration: 0.2 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
             />
           )}
           <span className="relative z-10 flex items-center space-x-2">

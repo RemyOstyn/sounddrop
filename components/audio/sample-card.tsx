@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { Heart, MoreVertical, Users, TrendingUp } from 'lucide-react';
+import Image from 'next/image';
 import { PlayButton, CompactPlayButton } from './play-button';
 import { AudioVisualizer, MiniVisualizer } from './audio-visualizer';
 import { useAudio, usePlayTracking } from '@/hooks/use-audio';
@@ -88,18 +89,36 @@ export function SampleCard({
       
       {/* Top section */}
       <div className="relative z-10 flex items-start justify-between">
-        <div className="flex-1 min-w-0">
-          <h3 className="font-medium text-white text-sm truncate mb-1">
-            {sample.name}
-          </h3>
-          <p className="text-xs text-white/60 truncate">
-            {sample.library.user.name} • {sample.library.name}
-          </p>
-          {sample.library.category && (
-            <p className="text-xs text-white/40 truncate mt-0.5">
-              {sample.library.category.name}
-            </p>
+        <div className="flex items-start space-x-2 flex-1 min-w-0">
+          {/* Library icon thumbnail */}
+          {sample.library.iconUrl && (
+            <div className="flex-shrink-0">
+              <Image
+                src={sample.library.iconUrl}
+                alt={sample.library.name}
+                width={32}
+                height={32}
+                className="w-8 h-8 rounded-md object-cover bg-white/10"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+            </div>
           )}
+          
+          <div className="flex-1 min-w-0">
+            <h3 className="font-medium text-white text-sm truncate mb-1">
+              {sample.name}
+            </h3>
+            <p className="text-xs text-white/60 truncate">
+              {sample.library.user.name} • {sample.library.name}
+            </p>
+            {sample.library.category && (
+              <p className="text-xs text-white/40 truncate mt-0.5">
+                {sample.library.category.name}
+              </p>
+            )}
+          </div>
         </div>
         
         <button
@@ -238,6 +257,22 @@ function ListSampleCard({
         onPlay={play}
         onPause={pause}
       />
+
+      {/* Library icon thumbnail */}
+      {sample.library.iconUrl && (
+        <div className="flex-shrink-0">
+          <Image
+            src={sample.library.iconUrl}
+            alt={sample.library.name}
+            width={24}
+            height={24}
+            className="w-6 h-6 rounded object-cover bg-white/10"
+            onError={(e) => {
+              e.currentTarget.style.display = 'none';
+            }}
+          />
+        </div>
+      )}
 
       {/* Mini visualizer */}
       <div className="flex-shrink-0">

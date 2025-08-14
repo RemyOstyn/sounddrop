@@ -5,10 +5,11 @@ import { prisma } from '@/lib/prisma';
 // GET - Get samples in a library
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const libraryId = params.id;
+    const resolvedParams = await params;
+    const libraryId = resolvedParams.id;
     const url = new URL(request.url);
     const page = parseInt(url.searchParams.get('page') || '1');
     const limit = parseInt(url.searchParams.get('limit') || '20');

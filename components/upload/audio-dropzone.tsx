@@ -25,7 +25,7 @@ interface AudioDropzoneProps {
 
 export function AudioDropzone({
   onFilesAdded,
-  maxFiles = 10,
+  maxFiles = 100,
   disabled = false,
   className,
 }: AudioDropzoneProps) {

@@ -1,6 +1,6 @@
-// File upload constants
-export const MAX_AUDIO_SIZE_MB = parseInt(process.env.MAX_AUDIO_SIZE_MB || '50')
-export const MAX_ICON_SIZE_MB = parseInt(process.env.MAX_ICON_SIZE_MB || '2')
+// File upload constants - No size limits
+// export const MAX_AUDIO_SIZE_MB = parseInt(process.env.MAX_AUDIO_SIZE_MB || '50')
+// export const MAX_ICON_SIZE_MB = parseInt(process.env.MAX_ICON_SIZE_MB || '2')
 
 export const ALLOWED_AUDIO_TYPES = [
   'audio/mpeg',
@@ -31,11 +31,11 @@ export const APP_DESCRIPTION = 'The Pocket Soundboard - Instant access to your f
 export const DEFAULT_PAGE_SIZE = 20
 export const MAX_PAGE_SIZE = 100
 
-// Rate limiting
-export const UPLOAD_RATE_LIMIT = {
-  MAX_UPLOADS_PER_HOUR: 10,
-  WINDOW_MS: 60 * 60 * 1000 // 1 hour in milliseconds
-} as const
+// Rate limiting - Disabled
+// export const UPLOAD_RATE_LIMIT = {
+//   MAX_UPLOADS_PER_HOUR: 10,
+//   WINDOW_MS: 60 * 60 * 1000 // 1 hour in milliseconds
+// } as const
 
 // Audio player settings
 export const AUDIO_SETTINGS = {

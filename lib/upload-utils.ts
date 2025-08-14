@@ -2,7 +2,7 @@
  * Upload utility functions for SoundDrop
  */
 
-import { ALLOWED_AUDIO_TYPES, ALLOWED_IMAGE_TYPES, MAX_AUDIO_SIZE_MB, MAX_ICON_SIZE_MB } from './constants';
+import { ALLOWED_AUDIO_TYPES, ALLOWED_IMAGE_TYPES } from './constants';
 
 export interface UploadProgress {
   loaded: number;
@@ -171,14 +171,7 @@ export function validateAudioFile(file: File): { valid: boolean; error?: string 
     };
   }
 
-  const maxSizeBytes = MAX_AUDIO_SIZE_MB * 1024 * 1024;
-  if (file.size > maxSizeBytes) {
-    return {
-      valid: false,
-      error: `File too large. Maximum size: ${MAX_AUDIO_SIZE_MB}MB`,
-    };
-  }
-
+  // No size limits
   return { valid: true };
 }
 
@@ -193,14 +186,7 @@ export function validateImageFile(file: File): { valid: boolean; error?: string 
     };
   }
 
-  const maxSizeBytes = MAX_ICON_SIZE_MB * 1024 * 1024;
-  if (file.size > maxSizeBytes) {
-    return {
-      valid: false,
-      error: `File too large. Maximum size: ${MAX_ICON_SIZE_MB}MB`,
-    };
-  }
-
+  // No size limits
   return { valid: true };
 }
 
@@ -238,49 +224,6 @@ export async function deleteIconFile(fileName: string): Promise<UploadResult> {
   }
 }
 
-/**
- * Get upload rate limit status
- */
-export async function getUploadRateLimit(): Promise<{
-  remaining: number;
-  resetTime: number;
-  maxUploads: number;
-  windowMs: number;
-} | null> {
-  try {
-    const response = await fetch('/api/upload/audio');
-    
-    if (response.ok) {
-      return await response.json();
-    }
-    
-    return null;
-  } catch (error) {
-    console.error('Failed to get rate limit info:', error);
-    return null;
-  }
-}
-
-/**
- * Format remaining time until rate limit reset
- */
-export function formatRateLimitReset(resetTime: number): string {
-  const now = Date.now();
-  const diff = resetTime - now;
-  
-  if (diff <= 0) {
-    return 'Now';
-  }
-  
-  const minutes = Math.ceil(diff / (1000 * 60));
-  
-  if (minutes < 60) {
-    return `${minutes} minute${minutes === 1 ? '' : 's'}`;
-  }
-  
-  const hours = Math.ceil(minutes / 60);
-  return `${hours} hour${hours === 1 ? '' : 's'}`;
-}
 
 /**
  * Check if file drop is valid

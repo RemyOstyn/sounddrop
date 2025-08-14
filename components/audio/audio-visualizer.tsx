@@ -25,6 +25,7 @@ export function AudioVisualizer({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationFrameRef = useRef<number>(0);
   const [bars, setBars] = useState<number[]>([]);
+  const needsRedraw = useRef(false);
 
   // Generate random bars for visualization
   const generateBars = useCallback(() => {
@@ -81,11 +82,16 @@ export function AudioVisualizer({
         ctx.stroke();
       }
 
+      // Continue animation if playing or if we need a redraw
       if (isPlaying) {
         // Update bars occasionally for animation
         if (Math.random() < 0.1) {
           setBars(generateBars());
         }
+        animationFrameRef.current = requestAnimationFrame(animate);
+      } else if (needsRedraw.current) {
+        // Force a single redraw after resize
+        needsRedraw.current = false;
         animationFrameRef.current = requestAnimationFrame(animate);
       }
     };
@@ -99,7 +105,7 @@ export function AudioVisualizer({
     };
   }, [isPlaying, bars, duration, currentTime, height, color, barCount, generateBars]);
 
-  // Update canvas size
+  // Initialize and update canvas size
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -113,9 +119,14 @@ export function AudioVisualizer({
       if (ctx) {
         ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
       }
+      
+      // Flag for redraw after resize
+      needsRedraw.current = true;
     };
 
+    // Initial size setup
     updateSize();
+
     window.addEventListener('resize', updateSize);
     return () => window.removeEventListener('resize', updateSize);
   }, [height]);

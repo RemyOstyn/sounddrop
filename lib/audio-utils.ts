@@ -36,9 +36,6 @@ export function validateAudioFile(file: File): { valid: boolean; error?: string 
     'audio/ogg',
   ];
 
-  const maxSizeMB = parseInt(process.env.NEXT_PUBLIC_MAX_AUDIO_SIZE_MB || '50');
-  const maxSizeBytes = maxSizeMB * 1024 * 1024;
-
   if (!allowedTypes.includes(file.type)) {
     return {
       valid: false,
@@ -46,13 +43,7 @@ export function validateAudioFile(file: File): { valid: boolean; error?: string 
     };
   }
 
-  if (file.size > maxSizeBytes) {
-    return {
-      valid: false,
-      error: `File too large. Maximum size: ${maxSizeMB}MB`,
-    };
-  }
-
+  // No size limits
   return { valid: true };
 }
 

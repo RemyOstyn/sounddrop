@@ -3,7 +3,8 @@ import { createClient } from '@/lib/supabase/server';
 import { prisma } from '@/lib/prisma';
 
 // POST - Sync authenticated user with Prisma database
-export async function POST(request: NextRequest) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function POST(_request: NextRequest) {
   try {
     const supabase = await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();

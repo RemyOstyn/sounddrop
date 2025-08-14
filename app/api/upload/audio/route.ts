@@ -1,32 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { prisma } from '@/lib/prisma';
-import { ALLOWED_AUDIO_TYPES, MAX_AUDIO_SIZE_MB, STORAGE_BUCKETS, UPLOAD_RATE_LIMIT } from '@/lib/constants';
+import { ALLOWED_AUDIO_TYPES, STORAGE_BUCKETS } from '@/lib/constants';
 
-// Simple in-memory rate limiting store (use Redis in production)
-const uploadAttempts = new Map<string, number[]>();
-
-function checkRateLimit(userId: string): boolean {
-  const now = Date.now();
-  const userAttempts = uploadAttempts.get(userId) || [];
-  
-  // Remove attempts older than 1 hour
-  const recentAttempts = userAttempts.filter(
-    timestamp => now - timestamp < UPLOAD_RATE_LIMIT.WINDOW_MS
-  );
-  
-  // Update the map with recent attempts
-  uploadAttempts.set(userId, recentAttempts);
-  
-  return recentAttempts.length < UPLOAD_RATE_LIMIT.MAX_UPLOADS_PER_HOUR;
-}
-
-function recordUploadAttempt(userId: string): void {
-  const now = Date.now();
-  const userAttempts = uploadAttempts.get(userId) || [];
-  userAttempts.push(now);
-  uploadAttempts.set(userId, userAttempts);
-}
+// Rate limiting disabled
 
 // POST - Upload audio file
 export async function POST(request: NextRequest) {
@@ -38,16 +15,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Check rate limit
-    if (!checkRateLimit(user.id)) {
-      return NextResponse.json(
-        { 
-          error: `Upload limit exceeded. Maximum ${UPLOAD_RATE_LIMIT.MAX_UPLOADS_PER_HOUR} uploads per hour.`,
-          retryAfter: UPLOAD_RATE_LIMIT.WINDOW_MS 
-        },
-        { status: 429 }
-      );
-    }
+    // Rate limiting disabled
 
     const formData = await request.formData();
     const file = formData.get('file') as File;
@@ -70,14 +38,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate file size
-    const maxSizeBytes = MAX_AUDIO_SIZE_MB * 1024 * 1024;
-    if (file.size > maxSizeBytes) {
-      return NextResponse.json(
-        { error: `File too large. Maximum size: ${MAX_AUDIO_SIZE_MB}MB` },
-        { status: 400 }
-      );
-    }
+    // File size validation disabled
 
     // Validate name length
     if (name.length > 100) {
@@ -121,8 +82,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Record the upload attempt (for rate limiting)
-    recordUploadAttempt(user.id);
+    // Rate limiting disabled
 
     // Generate unique filename
     const timestamp = Date.now();
@@ -199,39 +159,3 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET - Get upload status and rate limit info
-export async function GET() {
-  try {
-    const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const now = Date.now();
-    const userAttempts = uploadAttempts.get(user.id) || [];
-    const recentAttempts = userAttempts.filter(
-      timestamp => now - timestamp < UPLOAD_RATE_LIMIT.WINDOW_MS
-    );
-
-    const remaining = UPLOAD_RATE_LIMIT.MAX_UPLOADS_PER_HOUR - recentAttempts.length;
-    const resetTime = recentAttempts.length > 0 
-      ? Math.min(...recentAttempts) + UPLOAD_RATE_LIMIT.WINDOW_MS
-      : now;
-
-    return NextResponse.json({
-      remaining,
-      resetTime,
-      maxUploads: UPLOAD_RATE_LIMIT.MAX_UPLOADS_PER_HOUR,
-      windowMs: UPLOAD_RATE_LIMIT.WINDOW_MS,
-    });
-
-  } catch (error) {
-    console.error('Upload status error:', error);
-    return NextResponse.json(
-      { error: 'Failed to get upload status' },
-      { status: 500 }
-    );
-  }
-}

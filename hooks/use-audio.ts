@@ -62,6 +62,7 @@ export function useAudio(
   } = options;
 
   const [hasTriggeredCallbacks, setHasTriggeredCallbacks] = useState(false);
+  const [hasTrackedCurrentPlay, setHasTrackedCurrentPlay] = useState(false);
 
   const {
     loadSample,
@@ -98,14 +99,16 @@ export function useAudio(
   useEffect(() => {
     if (!sample) return;
 
-    if (sample.isPlaying && onPlay) {
+    if (sample.isPlaying && onPlay && !hasTrackedCurrentPlay) {
       onPlay();
+      setHasTrackedCurrentPlay(true);
     } else if (!sample.isPlaying && sample.currentTime === 0 && onStop) {
       onStop();
+      setHasTrackedCurrentPlay(false); // Reset for next play
     } else if (!sample.isPlaying && sample.currentTime > 0 && onPause) {
       onPause();
     }
-  }, [sample?.isPlaying, sample?.currentTime, onPlay, onPause, onStop]);
+  }, [sample?.isPlaying, sample?.currentTime, onPlay, onPause, onStop, hasTrackedCurrentPlay]);
 
   // Cleanup on unmount only
   useEffect(() => {

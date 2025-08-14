@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { ALLOWED_IMAGE_TYPES, MAX_ICON_SIZE_MB, STORAGE_BUCKETS } from '@/lib/constants';
+import { ALLOWED_IMAGE_TYPES, STORAGE_BUCKETS } from '@/lib/constants';
 
 // POST - Upload library icon
 export async function POST(request: NextRequest) {
@@ -32,14 +32,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate file size
-    const maxSizeBytes = MAX_ICON_SIZE_MB * 1024 * 1024;
-    if (file.size > maxSizeBytes) {
-      return NextResponse.json(
-        { error: `File too large. Maximum size: ${MAX_ICON_SIZE_MB}MB` },
-        { status: 400 }
-      );
-    }
+    // File size validation disabled
 
     // Generate unique filename
     const timestamp = Date.now();

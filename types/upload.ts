@@ -82,14 +82,7 @@ export interface UploadManagerState {
   maxConcurrent: number;
 }
 
-// Rate limit information
-export interface RateLimitInfo {
-  remaining: number;
-  resetTime: number;
-  maxUploads: number;
-  windowMs: number;
-  isLimited: boolean;
-}
+// Rate limiting removed
 
 // Upload configuration
 export interface UploadConfig {
@@ -113,7 +106,6 @@ export const IMAGE_ACCEPT = {
 export type UploadErrorType = 
   | 'FILE_TOO_LARGE'
   | 'INVALID_FILE_TYPE'
-  | 'RATE_LIMIT_EXCEEDED'
   | 'NETWORK_ERROR'
   | 'SERVER_ERROR'
   | 'VALIDATION_ERROR'

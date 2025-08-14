@@ -50,7 +50,7 @@ export default function MyLibrariesPage() {
     if (user) {
       fetchLibraries({ userId: user.id });
     }
-  }, [user]); // Only depend on user, not fetchLibraries
+  }, [user, fetchLibraries]); // Include fetchLibraries in dependency array per ESLint rule
 
   // Fetch categories for create/edit dialogs
   useEffect(() => {

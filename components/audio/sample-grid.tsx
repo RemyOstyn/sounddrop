@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from 'framer-motion'; // eslint-disable-line 
 import { Loader2, AlertCircle, RotateCcw } from 'lucide-react';
 import { SampleCard, SampleCardSkeleton } from './sample-card';
 import { useInfiniteScroll } from '@/hooks/use-infinite-scroll';
-import { useSamples } from '@/hooks/use-samples';
 import { SampleWithDetails, SampleFilters } from '@/types/database';
 import { cn } from '@/lib/utils';
 
@@ -29,49 +28,63 @@ export function SampleGrid({
   getUserFavorites // eslint-disable-line @typescript-eslint/no-unused-vars -- TODO: Will be used for user-specific favorite state
 }: SampleGridProps) {
   const [userFavorites, setUserFavorites] = useState<Record<string, boolean>>({});
-  const { samples, isLoading, error, hasNextPage, fetchSamples } = useSamples();
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-
-  // Fetch initial samples when component mounts or filters change
-  useEffect(() => {
-    fetchSamples(filters, 1, false);
-  }, [filters, fetchSamples]);
 
   // Fetcher function for infinite scroll
-  const fetcher = useCallback(async (page: number) => {
-    if (page === 1) {
-      // Initial load already handled by useEffect
-      return {
-        data: samples,
-        total: samples.length,
-        hasNextPage: hasNextPage
-      };
-    }
+  const fetcher = useCallback(async (page: number, pageSize: number) => {
+    // Build query parameters
+    const params = new URLSearchParams();
+    params.set('page', page.toString());
+    params.set('limit', pageSize.toString());
     
-    // Load more pages
-    setIsLoadingMore(true);
-    try {
-      await fetchSamples(filters, page, true);
-      return {
-        data: samples,
-        total: samples.length,
-        hasNextPage: hasNextPage
-      };
-    } finally {
-      setIsLoadingMore(false);
+    if (filters.categoryId) {
+      params.set('categoryId', filters.categoryId);
     }
-  }, [samples, hasNextPage, fetchSamples, filters]);
+    if (filters.libraryId) {
+      params.set('libraryId', filters.libraryId);
+    }
+    if (filters.search) {
+      params.set('search', filters.search);
+    }
+    if (filters.sortBy) {
+      params.set('sortBy', filters.sortBy);
+    }
+    if (filters.sortOrder) {
+      params.set('sortOrder', filters.sortOrder);
+    }
+
+    const response = await fetch(`/api/samples?${params.toString()}`);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch samples: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    
+    return {
+      data: data.samples,
+      total: data.total,
+      hasNextPage: data.hasNextPage
+    };
+  }, [filters]);
 
   const {
-    ref: loadMoreRef
-  } = useInfiniteScroll(fetcher, {
+    data: displaySamples,
+    isLoading,
+    isLoadingMore,
+    hasNextPage,
+    error,
+    ref: loadMoreRef,
+    refresh
+  } = useInfiniteScroll<SampleWithDetails>(fetcher, {
     pageSize: 20,
     threshold: 0.1,
     rootMargin: '200px'
   });
 
-  // Use samples from hook instead of scroll data
-  const displaySamples = samples;
+  // Reset infinite scroll when filters change
+  useEffect(() => {
+    refresh();
+  }, [filters, refresh]);
 
   // Handle favorite toggle
   const handleFavoriteToggle = useCallback((sampleId: string, isFavorited: boolean) => {
@@ -81,8 +94,8 @@ export function SampleGrid({
 
   // Handle refresh
   const handleRefresh = useCallback(() => {
-    fetchSamples(filters, 1, false);
-  }, [fetchSamples, filters]);
+    refresh();
+  }, [refresh]);
 
   // Grid layout classes
   const gridClasses = {

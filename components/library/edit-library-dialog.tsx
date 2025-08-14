@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { X, Loader2, Edit3, Image as ImageIcon } from 'lucide-react';
+import Image from 'next/image';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -222,9 +223,11 @@ export function EditLibraryDialog({
               >
                 {displayIconUrl ? (
                   <div className="relative">
-                    <img
+                    <Image
                       src={displayIconUrl}
                       alt="Library icon"
+                      width={80}
+                      height={80}
                       className="w-20 h-20 mx-auto rounded-lg object-cover"
                     />
                     <div className="flex justify-center space-x-1 mt-2">

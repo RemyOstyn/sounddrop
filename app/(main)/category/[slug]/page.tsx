@@ -1,13 +1,16 @@
 'use client';
 
-import { useEffect, useState, use } from 'react';
+import { useEffect, use } from 'react';
 import { notFound } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Volume2, Users, Library, TrendingUp } from 'lucide-react';
+import { Volume2, Users, Library, TrendingUp, Play, Pause } from 'lucide-react';
+import Image from 'next/image';
 import { SampleGrid } from '@/components/audio/sample-grid';
+import { AudioVisualizer } from '@/components/audio/audio-visualizer';
 import { ViewToggle, useViewToggle } from '@/components/shared/view-toggle';
 import { LoadingSpinner } from '@/components/shared/skeleton-loader';
 import { useCategory } from '@/hooks/use-category';
+import { useAudio, usePlayTracking } from '@/hooks/use-audio';
 import { cn } from '@/lib/utils';
 
 interface CategoryPageProps {
@@ -123,39 +126,25 @@ export default function CategoryPage({ params }: CategoryPageProps) {
           </motion.div>
 
           {/* Trending samples from database */}
-          <div className="flex space-x-3 overflow-x-auto pb-4">
+          <div className="flex space-x-3 overflow-x-auto pb-4 pt-4">
             {trendingSamples.length > 0 ? (
               trendingSamples.map((sample, i) => (
-                <motion.div
+                <TrendingSampleCard
                   key={sample.id}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: i * 0.1 }}
-                  className="flex-shrink-0 w-48 glass glass-hover rounded-lg p-4 cursor-pointer"
-                >
-                  <div className="flex items-center space-x-3 mb-3">
-                    <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center text-white font-bold text-sm">
-                      {i + 1}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-white truncate text-sm">
-                        {sample.name}
-                      </div>
-                      <div className="text-xs text-white/50">
-                        {sample.playCount} plays
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-xs text-white/40 mb-2">
-                    by {sample.library.user.name}
-                  </div>
-                  <div className="h-6 bg-white/5 rounded overflow-hidden">
-                    <div 
-                      className="h-full bg-gradient-primary opacity-60"
-                      style={{ width: `${Math.min(100, (sample.playCount / Math.max(...trendingSamples.map(s => s.playCount))) * 100)}%` }}
-                    />
-                  </div>
-                </motion.div>
+                  sample={{
+                    ...sample,
+                    library: {
+                      ...sample.library,
+                      iconUrl: sample.library.iconUrl || undefined,
+                      user: {
+                        name: sample.library.user.name || 'Anonymous'
+                      }
+                    }
+                  }}
+                  rank={i + 1}
+                  maxPlayCount={Math.max(...trendingSamples.map(s => s.playCount))}
+                  delay={i * 0.1}
+                />
               ))
             ) : (
               // Loading or empty state
@@ -266,5 +255,134 @@ function CategoryStat({
         <div className="text-sm text-white/60">{label}</div>
       </div>
     </div>
+  );
+}
+
+function TrendingSampleCard({
+  sample,
+  rank,
+  // maxPlayCount is available but not used in this component
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  maxPlayCount: _maxPlayCount,
+  delay
+}: {
+  sample: {
+    id: string;
+    name: string;
+    fileUrl: string;
+    playCount: number;
+    library: {
+      name: string;
+      iconUrl?: string | undefined;
+      user: {
+        name: string;
+      };
+    };
+  };
+  rank: number;
+  maxPlayCount: number;
+  delay: number;
+}) {
+  const { trackPlay } = usePlayTracking();
+  
+  const {
+    play,
+    pause,
+    isPlaying,
+    isLoading,
+    currentTime,
+    duration
+  } = useAudio(
+    sample.id,
+    sample.fileUrl,
+    sample.name,
+    {
+      onPlay: () => trackPlay(sample.id)
+    }
+  );
+
+  const handleCardClick = () => {
+    if (isPlaying) {
+      pause();
+    } else {
+      play();
+    }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ delay }}
+      className="flex-shrink-0 w-48 glass glass-hover rounded-lg p-4 cursor-pointer relative overflow-hidden"
+      onClick={handleCardClick}
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+    >
+      {/* Play button overlay */}
+      <div className="absolute top-3 right-3">
+        <div className={cn(
+          "w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200",
+          isPlaying ? "bg-orange-500" : "bg-white/10 hover:bg-white/20"
+        )}>
+          {isLoading ? (
+            <div className="w-3 h-3 border border-white/30 border-t-white rounded-full animate-spin" />
+          ) : isPlaying ? (
+            <Pause size={12} className="text-white ml-0.5" />
+          ) : (
+            <Play size={12} className="text-white ml-0.5" />
+          )}
+        </div>
+      </div>
+
+      <div className="flex items-center space-x-3 mb-3">
+        <div className="w-4 h-8 bg-gradient-primary rounded-lg flex items-center justify-center text-white font-bold text-sm">
+          {rank}
+        </div>
+        
+        {/* Library icon thumbnail */}
+        {sample.library.iconUrl && (
+          <div className="flex-shrink-0">
+            <Image
+              src={sample.library.iconUrl}
+              alt={sample.library.name}
+              width={24}
+              height={24}
+              className="w-6 h-6 rounded object-cover bg-white/10"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+              }}
+            />
+          </div>
+        )}
+        
+        <div className="flex-1 min-w-0">
+          <div className="font-medium text-white truncate text-sm">
+            {sample.name}
+          </div>
+          <div className="text-xs text-white/50">
+            {sample.playCount} plays
+          </div>
+        </div>
+      </div>
+      <div className="text-xs text-white/40 mb-2">
+        by {sample.library.user.name}
+      </div>
+      
+      {/* Audio Visualizer */}
+      <div className="mb-2">
+        <AudioVisualizer
+          isPlaying={isPlaying}
+          duration={duration}
+          currentTime={currentTime}
+          height={24}
+          barCount={12}
+          color="rgba(249, 115, 22, 0.6)"
+        />
+      </div>
+
+      {/* Background gradient on hover */}
+      <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-red-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+    </motion.div>
   );
 }

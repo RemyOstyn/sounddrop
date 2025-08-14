@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { UploadProgress, UploadResult, RateLimitInfo, FileUploadState } from '@/types/upload';
-import { uploadAudioFile, uploadIconFile, getUploadRateLimit } from '@/lib/upload-utils';
+import { UploadProgress, UploadResult, FileUploadState } from '@/types/upload';
+import { uploadAudioFile, uploadIconFile } from '@/lib/upload-utils';
 import { SampleWithDetails } from '@/types/database';
 
 export interface UseUploadResult {
@@ -12,43 +12,18 @@ export interface UseUploadResult {
   error: string | null;
   success: boolean;
   
-  // Rate limiting
-  rateLimitInfo: RateLimitInfo | null;
-  isRateLimited: boolean;
-  
   // Actions
   uploadAudio: (file: File, name: string, libraryId: string) => Promise<SampleWithDetails | null>;
   uploadIcon: (file: File, libraryId?: string) => Promise<string | null>;
   clearError: () => void;
   resetUploadState: () => void;
-  
-  // Rate limit actions
-  fetchRateLimit: () => Promise<void>;
 }
 
-export function useUpload(autoFetchRateLimit = true): UseUploadResult {
+export function useUpload(): UseUploadResult {
   const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState<UploadProgress | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [rateLimitInfo, setRateLimitInfo] = useState<RateLimitInfo | null>(null);
-
-  const fetchRateLimit = useCallback(async () => {
-    try {
-      const limitInfo = await getUploadRateLimit();
-      if (limitInfo) {
-        setRateLimitInfo({
-          remaining: limitInfo.remaining,
-          resetTime: limitInfo.resetTime,
-          maxUploads: limitInfo.maxUploads,
-          windowMs: limitInfo.windowMs,
-          isLimited: limitInfo.remaining <= 0,
-        });
-      }
-    } catch (error) {
-      console.error('Failed to fetch rate limit info:', error);
-    }
-  }, []); // No dependencies - function is stable
 
   const uploadAudio = useCallback(async (
     file: File, 
@@ -69,11 +44,6 @@ export function useUpload(autoFetchRateLimit = true): UseUploadResult {
         setSuccess(true);
         setProgress({ loaded: file.size, total: file.size, percentage: 100 });
         
-        // Refresh rate limit info after successful upload (delayed to avoid UI confusion)
-        setTimeout(() => {
-          fetchRateLimit();
-        }, 1000);
-        
         // Return the uploaded sample data
         return (result.sample as SampleWithDetails) || null;
       } else {
@@ -88,7 +58,7 @@ export function useUpload(autoFetchRateLimit = true): UseUploadResult {
     } finally {
       setIsUploading(false);
     }
-  }, [fetchRateLimit]);
+  }, []);
 
   const uploadIcon = useCallback(async (
     file: File, 
@@ -124,26 +94,15 @@ export function useUpload(autoFetchRateLimit = true): UseUploadResult {
     setSuccess(false);
   }, []);
 
-  // Fetch rate limit info on mount (only if autoFetchRateLimit is true)
-  // Note: In development, React.StrictMode may cause this to run twice - this is expected behavior
-  useEffect(() => {
-    if (autoFetchRateLimit) {
-      fetchRateLimit();
-    }
-  }, []); // Only run once on mount, controlled by autoFetchRateLimit param
-
   return {
     isUploading,
     progress,
     error,
     success,
-    rateLimitInfo,
-    isRateLimited: rateLimitInfo?.isLimited || false,
     uploadAudio,
     uploadIcon,
     clearError,
     resetUploadState,
-    fetchRateLimit,
   };
 }
 
