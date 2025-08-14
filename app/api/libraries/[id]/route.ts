@@ -28,7 +28,8 @@ export async function GET(
         user: {
           select: {
             id: true,
-            name: true,
+            username: true,
+            displayName: true,
             avatar: true,
           },
         },
@@ -192,7 +193,8 @@ export async function PATCH(
         user: {
           select: {
             id: true,
-            name: true,
+            username: true,
+            displayName: true,
             avatar: true,
           },
         },

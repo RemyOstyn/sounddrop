@@ -72,7 +72,8 @@ export async function GET(
                 user: {
                   select: {
                     id: true,
-                    name: true,
+                    username: true,
+                    displayName: true,
                     avatar: true,
                   },
                 },

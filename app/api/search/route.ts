@@ -47,7 +47,8 @@ export async function GET(request: NextRequest) {
               user: {
                 select: {
                   id: true,
-                  name: true,
+                  username: true,
+                  displayName: true,
                   avatar: true
                 }
               }
@@ -75,7 +76,8 @@ export async function GET(request: NextRequest) {
           user: {
             select: {
               id: true,
-              name: true,
+              username: true,
+              displayName: true,
               avatar: true
             }
           },
@@ -92,14 +94,15 @@ export async function GET(request: NextRequest) {
       prisma.user.findMany({
         where: {
           OR: [
-            { name: { contains: searchTerm, mode: 'insensitive' } },
-            { email: { contains: searchTerm, mode: 'insensitive' } }
+            { username: { contains: searchTerm, mode: 'insensitive' } },
+            { displayName: { contains: searchTerm, mode: 'insensitive' } }
           ]
         },
         take: limit,
         select: {
           id: true,
-          name: true,
+          username: true,
+          displayName: true,
           email: true,
           avatar: true,
           _count: {
