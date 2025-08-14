@@ -29,6 +29,10 @@ interface AuthState {
   setError: (error: string | null) => void;
 }
 
+// Track sync attempts to prevent duplicates
+let isUserSyncing = false;
+let lastSyncUserId: string | null = null;
+
 export const useAuthStore = create<AuthState>()(
   subscribeWithSelector((set, get) => ({
     // Initial state
@@ -139,6 +143,32 @@ export const useAuthStore = create<AuthState>()(
           return;
         }
 
+        // Sync user if session exists (only if not already syncing)
+        if (session?.user && !isUserSyncing && lastSyncUserId !== session.user.id) {
+          isUserSyncing = true;
+          lastSyncUserId = session.user.id;
+          
+          try {
+            const response = await fetch('/api/user/sync', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${session.access_token}`,
+              },
+            });
+            
+            if (response.ok) {
+              const data = await response.json();
+              console.log('Initial user sync result:', data.message);
+            } else {
+              console.error('Initial user sync failed:', response.statusText);
+            }
+          } catch (error) {
+            console.error('Initial user sync error:', error);
+          } finally {
+            isUserSyncing = false;
+          }
+        }
+
         // Set initial state
         set({
           user: session?.user as AuthUser || null,
@@ -152,6 +182,32 @@ export const useAuthStore = create<AuthState>()(
         supabase.auth.onAuthStateChange(async (event, session) => {
           console.log('Auth state change:', event, session?.user?.email);
           
+          // Sync user with database when they sign in (only if not already syncing)
+          if (event === 'SIGNED_IN' && session?.user && !isUserSyncing && lastSyncUserId !== session.user.id) {
+            isUserSyncing = true;
+            lastSyncUserId = session.user.id;
+            
+            try {
+              const response = await fetch('/api/user/sync', {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${session.access_token}`,
+                },
+              });
+              
+              if (response.ok) {
+                const data = await response.json();
+                console.log('User sync result:', data.message);
+              } else {
+                console.error('User sync failed:', response.statusText);
+              }
+            } catch (error) {
+              console.error('User sync error:', error);
+            } finally {
+              isUserSyncing = false;
+            }
+          }
+          
           set({
             user: session?.user as AuthUser || null,
             session,
@@ -161,8 +217,9 @@ export const useAuthStore = create<AuthState>()(
 
           // Handle specific events
           if (event === 'SIGNED_OUT') {
-            // Clear any stored user data
+            // Clear any stored user data and reset sync tracking
             set({ user: null, session: null });
+            lastSyncUserId = null;
           }
         });
 

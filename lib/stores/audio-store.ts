@@ -48,13 +48,14 @@ interface AudioStore {
 // Audio elements map to manage actual audio instances
 const audioElements = new Map<string, HTMLAudioElement>();
 
-// Audio context for advanced audio processing
+// Audio context for advanced audio processing (currently disabled to avoid CORS issues)
 let audioContext: AudioContext | null = null;
 const audioNodes = new Map<string, {
   source: MediaElementAudioSourceNode;
   gainNode: GainNode;
 }>();
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const initAudioContext = () => {
   if (!audioContext) {
     const windowWithWebkit = window as WindowWithWebkit;
@@ -64,22 +65,17 @@ const initAudioContext = () => {
 };
 
 const createAudioElement = (id: string, url: string): HTMLAudioElement => {
-  const audio = new Audio();
-  audio.src = url;
+  const audio = new Audio(url);
   audio.preload = AUDIO_SETTINGS.PRELOAD_STRATEGY;
-  audio.crossOrigin = 'anonymous';
   
-  // Set up audio context nodes for advanced audio processing
-  const ctx = initAudioContext();
-  if (ctx) {
-    const source = ctx.createMediaElementSource(audio);
-    const gainNode = ctx.createGain();
-    
-    source.connect(gainNode);
-    gainNode.connect(ctx.destination);
-    
-    audioNodes.set(id, { source, gainNode });
+  // Attach to DOM (hidden) - some browsers require this for audio to play
+  if (typeof document !== 'undefined') {
+    audio.setAttribute('data-sample-id', id);
+    (audio as HTMLElement).style.display = 'none';
+    document.body.appendChild(audio);
   }
+  
+  console.log(`Creating basic HTML5 audio element for ${id} with URL:`, url);
   
   audioElements.set(id, audio);
   return audio;
@@ -124,19 +120,44 @@ export const useAudioStore = create<AudioStore>()(
         // Wait for metadata to load
         await new Promise<void>((resolve, reject) => {
           const onLoadedMetadata = () => {
+            console.log(`Audio metadata loaded successfully for ${id}:`, {
+              duration: audio.duration,
+              readyState: audio.readyState,
+              networkState: audio.networkState
+            });
             audio.removeEventListener('loadedmetadata', onLoadedMetadata);
             audio.removeEventListener('error', onError);
             resolve();
           };
 
-          const onError = () => {
+          const onError = (event: Event) => {
+            console.error(`Audio loading failed for ${id}:`, {
+              error: audio.error,
+              networkState: audio.networkState,
+              readyState: audio.readyState,
+              src: audio.src,
+              event
+            });
             audio.removeEventListener('loadedmetadata', onLoadedMetadata);
             audio.removeEventListener('error', onError);
-            reject(new Error('Failed to load audio'));
+            reject(new Error(`Failed to load audio: ${audio.error?.message || 'Unknown error'}`));
           };
 
           audio.addEventListener('loadedmetadata', onLoadedMetadata);
           audio.addEventListener('error', onError);
+          
+          // Add timeout to prevent hanging
+          setTimeout(() => {
+            if (audio.readyState === 0) {
+              console.warn(`Audio loading timeout for ${id}, checking if playable anyway`);
+              // Sometimes audio can play without metadata loaded
+              if (audio.src && url) {
+                resolve();
+              } else {
+                reject(new Error('Audio loading timeout'));
+              }
+            }
+          }, 10000); // 10 second timeout
         });
 
         // Set up event listeners
@@ -168,6 +189,7 @@ export const useAudioStore = create<AudioStore>()(
         }));
 
       } catch (error) {
+        console.error(`Failed to load sample ${id}:`, error);
         set((state) => ({
           activeSamples: new Map(state.activeSamples.set(id, {
             ...initialState,
@@ -184,36 +206,84 @@ export const useAudioStore = create<AudioStore>()(
       const sample = activeSamples.get(id);
       const audio = audioElements.get(id);
 
-      if (!sample || !audio) return;
+      if (!sample || !audio) {
+        console.warn(`Cannot play sample ${id}: missing sample or audio element`);
+        return;
+      }
+
+      console.log(`Attempting to play sample ${id}:`, {
+        src: audio.src,
+        readyState: audio.readyState,
+        networkState: audio.networkState,
+        duration: audio.duration,
+        currentTime: audio.currentTime,
+        paused: audio.paused,
+        muted: audio.muted,
+        volume: audio.volume
+      });
 
       try {
-        // Resume audio context if needed
-        const ctx = audioContext;
-        if (ctx && ctx.state === 'suspended') {
-          await ctx.resume();
+        // Set volume before playing
+        const targetVolume = isMuted ? 0 : sample.volume * globalVolume;
+        audio.volume = targetVolume;
+        audio.muted = false; // Ensure audio is not muted
+        console.log(`Set volume for ${id} to:`, audio.volume, 'muted:', audio.muted);
+
+        // Reset current time if at the end
+        if (audio.currentTime >= audio.duration && audio.duration > 0) {
+          audio.currentTime = 0;
         }
 
-        // Set volume
-        audio.volume = isMuted ? 0 : sample.volume * globalVolume;
-
-        // Play audio
-        await audio.play();
-
-        // Update state
-        set((state) => ({
-          activeSamples: new Map(state.activeSamples.set(id, {
-            ...sample,
-            isPlaying: true,
-            error: undefined
-          }))
-        }));
+        // Play audio and handle the promise properly
+        const playPromise = audio.play();
+        
+        if (playPromise !== undefined) {
+          await playPromise;
+          console.log(`Audio playback started successfully for ${id}`);
+          
+          // Update state only after successful play
+          set((state) => ({
+            activeSamples: new Map(state.activeSamples.set(id, {
+              ...sample,
+              isPlaying: true,
+              error: undefined
+            }))
+          }));
+        } else {
+          // Fallback for older browsers
+          console.log(`Play promise undefined for ${id}, assuming playback started`);
+          set((state) => ({
+            activeSamples: new Map(state.activeSamples.set(id, {
+              ...sample,
+              isPlaying: true,
+              error: undefined
+            }))
+          }));
+        }
 
       } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Playback failed';
+        console.error(`Playback failed for ${id}:`, {
+          error: errorMessage,
+          errorDetails: error,
+          audioSrc: audio.src,
+          readyState: audio.readyState,
+          networkState: audio.networkState,
+          paused: audio.paused,
+          muted: audio.muted,
+          volume: audio.volume
+        });
+        
+        // Specific error handling for common issues
+        if (errorMessage.includes('NotAllowedError') || errorMessage.includes('not allowed')) {
+          console.warn('Playback blocked by browser autoplay policy. User interaction required.');
+        }
+        
         set((state) => ({
           activeSamples: new Map(state.activeSamples.set(id, {
             ...sample,
             isPlaying: false,
-            error: error instanceof Error ? error.message : 'Playback failed'
+            error: errorMessage
           }))
         }));
       }
@@ -296,6 +366,7 @@ export const useAudioStore = create<AudioStore>()(
         audio.volume = isMuted ? 0 : clampedVolume * globalVolume;
       }
 
+      // Skip Web Audio API volume control for now
       if (audioNode) {
         audioNode.gainNode.gain.value = isMuted ? 0 : clampedVolume * globalVolume;
       }
@@ -377,6 +448,12 @@ export const useAudioStore = create<AudioStore>()(
       if (audio) {
         audio.pause();
         audio.src = '';
+        
+        // Remove from DOM if attached
+        if (typeof document !== 'undefined' && audio.parentNode) {
+          audio.parentNode.removeChild(audio);
+        }
+        
         audioElements.delete(id);
       }
 
@@ -423,6 +500,10 @@ if (typeof window !== 'undefined') {
     audioElements.forEach(audio => {
       audio.pause();
       audio.src = '';
+      // Remove from DOM if attached
+      if (audio.parentNode) {
+        audio.parentNode.removeChild(audio);
+      }
     });
     audioElements.clear();
     audioNodes.clear();

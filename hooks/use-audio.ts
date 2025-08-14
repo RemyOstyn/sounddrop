@@ -107,16 +107,16 @@ export function useAudio(
     }
   }, [sample?.isPlaying, sample?.currentTime, onPlay, onPause, onStop]);
 
-  // Cleanup on unmount
+  // Cleanup on unmount only
   useEffect(() => {
     return () => {
-      if (sample && !sample.isPlaying) {
-        // Only remove if not playing to avoid interrupting playback
-        // in other components using the same sample
+      // Only cleanup when component unmounts, not when playing state changes
+      const currentSample = getSample(id);
+      if (currentSample && !currentSample.isPlaying) {
         removeSample(id);
       }
     };
-  }, [id, sample?.isPlaying, removeSample]);
+  }, [id, getSample, removeSample]);
 
   const load = useCallback(async () => {
     if (!url) return;

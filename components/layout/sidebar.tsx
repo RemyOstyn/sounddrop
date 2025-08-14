@@ -17,7 +17,7 @@ import {
   Settings
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { DEFAULT_CATEGORIES } from '@/lib/constants';
+import { useCategories } from '@/hooks/use-categories';
 import { SearchCommand } from './search-command';
 import { useAuth } from '@/hooks/use-auth';
 import { UserMenu } from '@/components/auth/user-menu';
@@ -42,6 +42,7 @@ const userNavItems = [
 export function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname();
   const { isAuthenticated, isInitialized } = useAuth();
+  const { categories, isLoading: isCategoriesLoading } = useCategories();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [expandedSection, setExpandedSection] = useState<string | null>('categories');
 
@@ -111,19 +112,35 @@ export function Sidebar({ className }: SidebarProps) {
               )}
             >
               <div className="space-y-1">
-                {DEFAULT_CATEGORIES.map((category) => (
-                  <NavItem
-                    key={category.slug}
-                    icon={(() => {
-                      // Dynamic icon import would be better, but for now we'll use Volume2
-                      return Volume2;
-                    })()}
-                    label={category.name}
-                    href={`/category/${category.slug}`}
-                    isActive={pathname === `/category/${category.slug}`}
-                    isSubItem
-                  />
-                ))}
+                {isCategoriesLoading ? (
+                  // Loading state
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="ml-2 pl-3 p-2.5 rounded-lg space-y-2"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="w-4 h-4 bg-white/10 rounded animate-pulse" />
+                        <div className="h-3 bg-white/10 rounded flex-1 animate-pulse" />
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  // Real categories from database
+                  categories.map((category) => (
+                    <NavItem
+                      key={category.slug}
+                      icon={(() => {
+                        // Dynamic icon import would be better, but for now we'll use Volume2
+                        return Volume2;
+                      })()}
+                      label={category.name}
+                      href={`/category/${category.slug}`}
+                      isActive={pathname === `/category/${category.slug}`}
+                      isSubItem
+                    />
+                  ))
+                )}
               </div>
             </SidebarSection>
           </div>

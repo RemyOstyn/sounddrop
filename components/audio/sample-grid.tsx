@@ -1,20 +1,14 @@
 'use client';
 
-import { useState, useCallback } from 'react'; // TODO: useEffect will be needed for data fetching/filtering
+import { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion'; // eslint-disable-line @typescript-eslint/no-unused-vars -- TODO: AnimatePresence will be used for grid transitions and filtering animations
 import { Loader2, AlertCircle, RotateCcw } from 'lucide-react';
 import { SampleCard, SampleCardSkeleton } from './sample-card';
 import { useInfiniteScroll } from '@/hooks/use-infinite-scroll';
+import { useSamples } from '@/hooks/use-samples';
 import { SampleWithDetails, SampleFilters } from '@/types/database';
 import { cn } from '@/lib/utils';
 
-// TODO: SampleGridData will be used for proper API response typing once real data is connected
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-interface SampleGridData {
-  samples: SampleWithDetails[];
-  total: number;
-  hasNextPage: boolean;
-}
 
 interface SampleGridProps {
   view?: 'grid' | 'list';
@@ -28,78 +22,47 @@ interface SampleGridProps {
 
 export function SampleGrid({
   view = 'grid',
-  filters = {}, // eslint-disable-line @typescript-eslint/no-unused-vars -- TODO: Will be used for filtering samples
+  filters = {},
   className,
   onSamplePlay, // eslint-disable-line @typescript-eslint/no-unused-vars -- TODO: Will be used for global audio state management
   onSampleFavorite,
   getUserFavorites // eslint-disable-line @typescript-eslint/no-unused-vars -- TODO: Will be used for user-specific favorite state
 }: SampleGridProps) {
   const [userFavorites, setUserFavorites] = useState<Record<string, boolean>>({});
+  const { samples, isLoading, error, hasNextPage, fetchSamples } = useSamples();
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  // Fetch initial samples when component mounts or filters change
+  useEffect(() => {
+    fetchSamples(filters, 1, false);
+  }, [filters, fetchSamples]);
 
   // Fetcher function for infinite scroll
-  const fetcher = useCallback(async (page: number, pageSize: number) => {
-    // Mock data for demo purposes (replace with actual API call once database is connected)
-    await new Promise(resolve => setTimeout(resolve, 500)); // Simulate API delay
-    
-    const mockSamples: SampleWithDetails[] = Array.from({ length: pageSize }, (_, i) => {
-      const sampleIndex = (page - 1) * pageSize + i;
+  const fetcher = useCallback(async (page: number) => {
+    if (page === 1) {
+      // Initial load already handled by useEffect
       return {
-        id: `sample-${sampleIndex}`,
-        name: `Amazing Sample ${sampleIndex + 1}`,
-        fileUrl: `https://example.com/sample-${sampleIndex}.mp3`,
-        duration: Math.floor(Math.random() * 30) + 5,
-        fileSize: Math.floor(Math.random() * 1000000) + 100000,
-        mimeType: 'audio/mpeg',
-        libraryId: `library-${Math.floor(sampleIndex / 5)}`,
-        playCount: Math.floor(Math.random() * 1000),
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        library: {
-          id: `library-${Math.floor(sampleIndex / 5)}`,
-          name: `Cool Library ${Math.floor(sampleIndex / 5) + 1}`,
-          description: 'A collection of amazing sounds',
-          iconUrl: null,
-          userId: 'user-1',
-          categoryId: 'memes',
-          isPublic: true,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          user: {
-            id: 'user-1',
-            name: 'Demo User',
-            avatar: null
-          },
-          category: {
-            id: 'memes',
-            name: 'Memes',
-            slug: 'memes',
-            icon: 'Laugh',
-            description: 'Funny meme sounds',
-            order: 0,
-            createdAt: new Date()
-          }
-        },
-        favorites: [],
-        _count: {
-          favorites: Math.floor(Math.random() * 50)
-        }
+        data: samples,
+        total: samples.length,
+        hasNextPage: hasNextPage
       };
-    });
-
-    return {
-      data: mockSamples,
-      total: 100, // Mock total
-      hasNextPage: page < 5 // Mock hasNextPage
-    };
-  }, []); // Removed 'filters' dependency as it's not actually used in the mock fetcher
+    }
+    
+    // Load more pages
+    setIsLoadingMore(true);
+    try {
+      await fetchSamples(filters, page, true);
+      return {
+        data: samples,
+        total: samples.length,
+        hasNextPage: hasNextPage
+      };
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [samples, hasNextPage, fetchSamples, filters]);
 
   const {
-    data: samples,
-    isLoading,
-    isLoadingMore,
-    hasNextPage,
-    error,
-    refresh,
     ref: loadMoreRef
   } = useInfiniteScroll(fetcher, {
     pageSize: 20,
@@ -107,11 +70,19 @@ export function SampleGrid({
     rootMargin: '200px'
   });
 
+  // Use samples from hook instead of scroll data
+  const displaySamples = samples;
+
   // Handle favorite toggle
   const handleFavoriteToggle = useCallback((sampleId: string, isFavorited: boolean) => {
     setUserFavorites(prev => ({ ...prev, [sampleId]: isFavorited }));
     onSampleFavorite?.(sampleId, isFavorited);
   }, [onSampleFavorite]);
+
+  // Handle refresh
+  const handleRefresh = useCallback(() => {
+    fetchSamples(filters, 1, false);
+  }, [fetchSamples, filters]);
 
   // Grid layout classes
   const gridClasses = {
@@ -120,7 +91,7 @@ export function SampleGrid({
   };
 
   // Loading state
-  if (isLoading && samples.length === 0) {
+  if (isLoading && displaySamples.length === 0) {
     return (
       <div className={cn('w-full', className)}>
         <div className={gridClasses[view]}>
@@ -133,7 +104,7 @@ export function SampleGrid({
   }
 
   // Error state
-  if (error && samples.length === 0) {
+  if (error && displaySamples.length === 0) {
     return (
       <div className={cn('w-full flex flex-col items-center justify-center py-12', className)}>
         <motion.div
@@ -149,7 +120,7 @@ export function SampleGrid({
             <p className="text-white/60 text-sm">{error}</p>
           </div>
           <button
-            onClick={refresh}
+            onClick={handleRefresh}
             className="inline-flex items-center space-x-2 px-4 py-2 glass glass-hover rounded-lg text-white transition-colors"
           >
             <RotateCcw size={16} />
@@ -161,7 +132,7 @@ export function SampleGrid({
   }
 
   // Empty state
-  if (!isLoading && samples.length === 0) {
+  if (!isLoading && displaySamples.length === 0) {
     return (
       <div className={cn('w-full flex flex-col items-center justify-center py-12', className)}>
         <motion.div
@@ -195,7 +166,7 @@ export function SampleGrid({
         className={gridClasses[view]}
         transition={{ duration: 0.2, ease: "easeOut" }}
       >
-        {samples.map((sample) => (
+        {displaySamples.map((sample) => (
           <motion.div
             key={sample.id}
             initial={{ opacity: 0 }}
@@ -229,7 +200,7 @@ export function SampleGrid({
       )}
 
       {/* End Message */}
-      {!hasNextPage && samples.length > 0 && (
+      {!hasNextPage && displaySamples.length > 0 && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -238,7 +209,7 @@ export function SampleGrid({
         >
           <div className="inline-flex items-center space-x-2 px-4 py-2 text-white/50 text-sm">
             <span>🎉</span>
-            <span>You&apos;ve reached the end! {samples.length} samples loaded.</span>
+            <span>You&apos;ve reached the end! {displaySamples.length} samples loaded.</span>
           </div>
         </motion.div>
       )}

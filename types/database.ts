@@ -116,6 +116,7 @@ export type CreateLibraryData = {
   description?: string
   categoryId: string
   iconFile?: File
+  iconUrl?: string
 }
 
 export type CreateSampleData = {
@@ -126,9 +127,11 @@ export type CreateSampleData = {
 
 export type UpdateLibraryData = {
   name?: string
-  description?: string
+  description?: string | null
   categoryId?: string
   iconFile?: File
+  iconUrl?: string | null
+  isPublic?: boolean
 }
 
 // Search and filtering types

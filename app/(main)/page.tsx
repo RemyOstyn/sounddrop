@@ -6,12 +6,14 @@ import { Music, TrendingUp, Clock, Users } from 'lucide-react';
 import { SampleGrid, CompactSampleGrid } from '@/components/audio/sample-grid'; // eslint-disable-line @typescript-eslint/no-unused-vars -- TODO: CompactSampleGrid will be used for featured sections
 import { ViewToggle, useViewToggle } from '@/components/shared/view-toggle';
 import { GridSkeleton } from '@/components/shared/skeleton-loader'; // eslint-disable-line @typescript-eslint/no-unused-vars -- TODO: GridSkeleton will be used for loading states
+import { useStats } from '@/hooks/use-stats';
 import { cn } from '@/lib/utils';
 import type { TabId, TabNavigationProps } from '@/types/ui';
 
 export default function HomePage() {
   const { view, setView } = useViewToggle();
   const [activeTab, setActiveTab] = useState<TabId>('all');
+  const { stats, isLoading: isStatsLoading } = useStats();
 
   return (
     <div className="min-h-full bg-gradient-to-br from-transparent via-purple-900/5 to-pink-900/5">
@@ -45,26 +47,30 @@ export default function HomePage() {
             <StatCard
               icon={<Music size={20} />}
               label="Total Samples"
-              value="12.5K"
+              value={stats?.totalSamples || (isStatsLoading ? "..." : "0")}
               gradient="from-purple-500 to-pink-500"
+              isLoading={isStatsLoading}
             />
             <StatCard
               icon={<TrendingUp size={20} />}
-              label="Trending"
-              value="847"
+              label="Libraries"
+              value={stats?.totalLibraries || (isStatsLoading ? "..." : "0")}
               gradient="from-orange-500 to-red-500"
+              isLoading={isStatsLoading}
             />
             <StatCard
               icon={<Clock size={20} />}
               label="Recent"
-              value="156"
+              value={stats?.recentSamples || (isStatsLoading ? "..." : "0")}
               gradient="from-blue-500 to-cyan-500"
+              isLoading={isStatsLoading}
             />
             <StatCard
               icon={<Users size={20} />}
-              label="Active Users"
-              value="3.2K"
+              label="Users"
+              value={stats?.totalUsers || (isStatsLoading ? "..." : "0")}
               gradient="from-green-500 to-emerald-500"
+              isLoading={isStatsLoading}
             />
           </motion.div>
         </div>
@@ -142,12 +148,14 @@ function StatCard({
   icon,
   label,
   value,
-  gradient
+  gradient,
+  isLoading
 }: {
   icon: React.ReactNode;
   label: string;
   value: string;
   gradient: string;
+  isLoading?: boolean;
 }) {
   return (
     <motion.div
@@ -167,7 +175,12 @@ function StatCard({
           {icon}
         </div>
         <div>
-          <div className="text-lg font-bold text-white">{value}</div>
+          <div className={cn(
+            "text-lg font-bold text-white",
+            isLoading && "animate-pulse"
+          )}>
+            {value}
+          </div>
           <div className="text-xs text-white/60">{label}</div>
         </div>
       </div>
