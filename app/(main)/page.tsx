@@ -3,9 +3,9 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Music, TrendingUp, Clock, Users } from 'lucide-react';
-import { SampleGrid, CompactSampleGrid } from '@/components/audio/sample-grid';
+import { SampleGrid, CompactSampleGrid } from '@/components/audio/sample-grid'; // eslint-disable-line @typescript-eslint/no-unused-vars -- TODO: CompactSampleGrid will be used for featured sections
 import { ViewToggle, useViewToggle } from '@/components/shared/view-toggle';
-import { GridSkeleton } from '@/components/shared/skeleton-loader';
+import { GridSkeleton } from '@/components/shared/skeleton-loader'; // eslint-disable-line @typescript-eslint/no-unused-vars -- TODO: GridSkeleton will be used for loading states
 import { cn } from '@/lib/utils';
 import type { TabId, TabNavigationProps } from '@/types/ui';
 

@@ -19,6 +19,10 @@ import {
 import { cn } from '@/lib/utils';
 import { DEFAULT_CATEGORIES } from '@/lib/constants';
 import { SearchCommand } from './search-command';
+import { useAuth } from '@/hooks/use-auth';
+import { UserMenu } from '@/components/auth/user-menu';
+import { LoginButton } from '@/components/auth/login-button';
+import { AuthLoading } from '@/components/auth/auth-loading';
 
 interface SidebarProps {
   className?: string;
@@ -37,6 +41,7 @@ const userNavItems = [
 
 export function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname();
+  const { isAuthenticated, isInitialized } = useAuth();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [expandedSection, setExpandedSection] = useState<string | null>('categories');
 
@@ -136,6 +141,8 @@ export function Sidebar({ className }: SidebarProps) {
                     isActive={pathname === item.href}
                     isSubItem
                     protected={item.protected}
+                    isAuthenticated={isAuthenticated}
+                    isInitialized={isInitialized}
                   />
                 ))}
               </div>
@@ -144,8 +151,18 @@ export function Sidebar({ className }: SidebarProps) {
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-white/10">
-          <button className="w-full flex items-center space-x-3 p-3 rounded-lg glass-hover text-white/70 hover:text-white transition-colors duration-200">
+        <div className="p-4 border-t border-white/10 space-y-3">
+          {/* Auth Section */}
+          {!isInitialized ? (
+            <AuthLoading />
+          ) : isAuthenticated ? (
+            <UserMenu />
+          ) : (
+            <LoginButton variant="outline" size="sm" className="w-full justify-center" />
+          )}
+
+          {/* Settings (Future) */}
+          <button className="w-full flex items-center space-x-3 p-3 rounded-lg glass-hover text-white/70 hover:text-white transition-colors duration-200 opacity-50 cursor-not-allowed">
             <Settings size={16} />
             <span>Settings</span>
           </button>
@@ -173,7 +190,9 @@ function NavItem({
   href,
   isActive,
   isSubItem = false,
-  protected: isProtected = false
+  protected: isProtected = false,
+  isAuthenticated = false,
+  isInitialized = false
 }: {
   icon: React.ComponentType<{ size?: number; className?: string }>;
   label: string;
@@ -181,18 +200,91 @@ function NavItem({
   isActive: boolean;
   isSubItem?: boolean;
   protected?: boolean;
+  isAuthenticated?: boolean;
+  isInitialized?: boolean;
 }) {
+  const handleClick = (e: React.MouseEvent) => {
+    if (isProtected && !isAuthenticated) {
+      e.preventDefault();
+      window.location.href = `/login?redirectTo=${encodeURIComponent(href)}`;
+    }
+  };
+
+  if (isProtected && !isAuthenticated) {
+    return (
+      <button onClick={handleClick} className="block w-full text-left">
+        <motion.div
+          className={cn(
+            'group relative flex items-center space-x-3 p-2.5 rounded-lg transition-all duration-200',
+            isSubItem ? 'ml-2 pl-3' : '',
+            isProtected && !isInitialized 
+              ? 'text-white/30 cursor-wait'
+              : isProtected && !isAuthenticated
+              ? 'text-white/50 hover:text-white/70 hover:bg-white/5 cursor-pointer'
+              : isActive 
+              ? 'glass-active text-white bg-white/10' 
+              : 'text-white/70 hover:text-white hover:bg-white/5'
+          )}
+          whileHover={isProtected && !isAuthenticated ? { x: 1 } : { x: 2 }}
+          whileTap={{ scale: 0.98 }}
+        >
+          {/* Active indicator */}
+          {isActive && (
+            <motion.div
+              className="absolute left-0 top-1/2 w-1 h-6 bg-gradient-primary rounded-r"
+              layoutId="activeTab"
+              initial={{ opacity: 0, x: -4 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.2 }}
+            />
+          )}
+
+          <Icon 
+            size={16} 
+            className={cn(
+              'transition-colors duration-200',
+              isActive ? 'text-white' : 'text-white/60 group-hover:text-white'
+            )} 
+          />
+          <span className="font-medium flex-1">{label}</span>
+
+          {/* Protected badge and auth status */}
+          {isProtected && (
+            <div className="flex items-center space-x-2">
+              {!isInitialized ? (
+                <div className="w-1.5 h-1.5 bg-gray-400 rounded-full opacity-30 animate-pulse" />
+              ) : !isAuthenticated ? (
+                <div className="text-xs text-white/40 font-medium">Login</div>
+              ) : (
+                <div className="w-1.5 h-1.5 bg-green-400 rounded-full opacity-60" />
+              )}
+            </div>
+          )}
+
+          {/* Hover glow */}
+          {isActive && (
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-lg opacity-50" />
+          )}
+        </motion.div>
+      </button>
+    );
+  }
+
   return (
-    <Link href={href}>
+    <Link href={href} className="block w-full text-left">
       <motion.div
         className={cn(
           'group relative flex items-center space-x-3 p-2.5 rounded-lg transition-all duration-200',
           isSubItem ? 'ml-2 pl-3' : '',
-          isActive 
+          isProtected && !isInitialized 
+            ? 'text-white/30 cursor-wait'
+            : isProtected && !isAuthenticated
+            ? 'text-white/50 hover:text-white/70 hover:bg-white/5 cursor-pointer'
+            : isActive 
             ? 'glass-active text-white bg-white/10' 
             : 'text-white/70 hover:text-white hover:bg-white/5'
         )}
-        whileHover={{ x: 2 }}
+        whileHover={isProtected && !isAuthenticated ? { x: 1 } : { x: 2 }}
         whileTap={{ scale: 0.98 }}
       >
         {/* Active indicator */}
@@ -215,9 +307,17 @@ function NavItem({
         />
         <span className="font-medium flex-1">{label}</span>
 
-        {/* Protected badge */}
+        {/* Protected badge and auth status */}
         {isProtected && (
-          <div className="w-1.5 h-1.5 bg-purple-400 rounded-full opacity-60" />
+          <div className="flex items-center space-x-2">
+            {!isInitialized ? (
+              <div className="w-1.5 h-1.5 bg-gray-400 rounded-full opacity-30 animate-pulse" />
+            ) : !isAuthenticated ? (
+              <div className="text-xs text-white/40 font-medium">Login</div>
+            ) : (
+              <div className="w-1.5 h-1.5 bg-green-400 rounded-full opacity-60" />
+            )}
+          </div>
         )}
 
         {/* Hover glow */}

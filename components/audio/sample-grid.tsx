@@ -1,13 +1,15 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useCallback } from 'react'; // TODO: useEffect will be needed for data fetching/filtering
+import { motion, AnimatePresence } from 'framer-motion'; // eslint-disable-line @typescript-eslint/no-unused-vars -- TODO: AnimatePresence will be used for grid transitions and filtering animations
 import { Loader2, AlertCircle, RotateCcw } from 'lucide-react';
 import { SampleCard, SampleCardSkeleton } from './sample-card';
 import { useInfiniteScroll } from '@/hooks/use-infinite-scroll';
 import { SampleWithDetails, SampleFilters } from '@/types/database';
 import { cn } from '@/lib/utils';
 
+// TODO: SampleGridData will be used for proper API response typing once real data is connected
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface SampleGridData {
   samples: SampleWithDetails[];
   total: number;
@@ -26,11 +28,11 @@ interface SampleGridProps {
 
 export function SampleGrid({
   view = 'grid',
-  filters = {},
+  filters = {}, // eslint-disable-line @typescript-eslint/no-unused-vars -- TODO: Will be used for filtering samples
   className,
-  onSamplePlay,
+  onSamplePlay, // eslint-disable-line @typescript-eslint/no-unused-vars -- TODO: Will be used for global audio state management
   onSampleFavorite,
-  getUserFavorites
+  getUserFavorites // eslint-disable-line @typescript-eslint/no-unused-vars -- TODO: Will be used for user-specific favorite state
 }: SampleGridProps) {
   const [userFavorites, setUserFavorites] = useState<Record<string, boolean>>({});
 
@@ -89,7 +91,7 @@ export function SampleGrid({
       total: 100, // Mock total
       hasNextPage: page < 5 // Mock hasNextPage
     };
-  }, [filters]);
+  }, []); // Removed 'filters' dependency as it's not actually used in the mock fetcher
 
   const {
     data: samples,

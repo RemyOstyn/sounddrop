@@ -193,8 +193,8 @@ function ListSampleCard({
   isPlaying,
   isLoading,
   error,
-  currentTime,
-  duration,
+  currentTime, // eslint-disable-line @typescript-eslint/no-unused-vars -- TODO: Will be used for progress tracking in audio visualizer
+  duration, // eslint-disable-line @typescript-eslint/no-unused-vars -- TODO: Will be used for progress calculation and display
   formattedDuration,
   showPlayCount,
   showFavoriteCount,

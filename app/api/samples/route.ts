@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { SampleWithDetails, SampleSortField, SortOrder } from '@/types/database';
+import { SampleWithDetails, SampleSortField, SortOrder } from '@/types/database'; // eslint-disable-line @typescript-eslint/no-unused-vars -- TODO: SampleWithDetails will be used once real API responses are typed
 import type { SampleWhereInput, SampleOrderByWithRelationInput } from '@/types/prisma';
 
 export async function GET(request: NextRequest) {

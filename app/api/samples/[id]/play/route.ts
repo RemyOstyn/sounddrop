@@ -3,10 +3,10 @@ import { prisma } from '@/lib/prisma';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const sampleId = params.id;
+    const { id: sampleId } = await params;
 
     // Increment play count
     await prisma.sample.update({

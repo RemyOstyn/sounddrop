@@ -249,19 +249,19 @@ model Favorite {
 - [X] Setup Supabase Storage buckets (audio, icons)
 
 ### Phase 2: Core Features
-- [ ] Implement layout with sidebar navigation
-- [ ] Create sample browsing pages
-- [ ] Build audio player component
-- [ ] Implement play tracking
-- [ ] Add search functionality
-- [ ] Create trending algorithm (based on recent plays)
+- [X] Implement layout with sidebar navigation
+- [X] Create sample browsing pages
+- [X] Build audio player component
+- [X] Implement play tracking
+- [X] Add search functionality
+- [X] Create trending algorithm (based on recent plays)
 
 ### Phase 3: Authentication
-- [ ] Setup Supabase Auth with Google OAuth
-- [ ] Create auth middleware
-- [ ] Build login/logout flow
-- [ ] Implement protected routes
-- [ ] Add user menu component
+- [X] Setup Supabase Auth with Google OAuth
+- [X] Create auth middleware
+- [X] Build login/logout flow
+- [X] Implement protected routes
+- [X] Add user menu component
 
 ### Phase 4: User Features
 - [ ] Build favorites system

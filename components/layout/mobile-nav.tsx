@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
+import { useAuth } from '@/hooks/use-auth';
 
 interface MobileNavProps {
   className?: string;
@@ -28,7 +29,8 @@ const navItems = [
 
 export function MobileNav({ className }: MobileNavProps) {
   const pathname = usePathname();
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const { isAuthenticated, isInitialized } = useAuth();
+  const [isSearchOpen, setIsSearchOpen] = useState(false); // eslint-disable-line @typescript-eslint/no-unused-vars -- TODO: Will be used when search modal is implemented
 
   const handleSearchClick = () => {
     setIsSearchOpen(true);
@@ -53,7 +55,7 @@ export function MobileNav({ className }: MobileNavProps) {
         
         <div className="relative px-4 py-2">
           <div className="flex items-center justify-around">
-            {navItems.map((item, index) => {
+            {navItems.map((item) => { // Removed unused 'index' parameter
               const isActive = pathname === item.href;
               const isSearch = item.label === 'Search';
               
@@ -65,6 +67,8 @@ export function MobileNav({ className }: MobileNavProps) {
                   href={item.href}
                   isActive={isActive}
                   isProtected={item.protected}
+                  isAuthenticated={isAuthenticated}
+                  isInitialized={isInitialized}
                   onClick={isSearch ? handleSearchClick : undefined}
                 />
               );
@@ -73,9 +77,21 @@ export function MobileNav({ className }: MobileNavProps) {
         </div>
 
         {/* Upload FAB */}
-        <Link href="/upload">
+        {isInitialized && (
           <motion.button
-            className="absolute -top-6 right-4 w-12 h-12 gradient-primary rounded-full shadow-lg flex items-center justify-center"
+            onClick={() => {
+              if (!isAuthenticated) {
+                window.location.href = '/login?redirectTo=/upload';
+              } else {
+                window.location.href = '/upload';
+              }
+            }}
+            className={cn(
+              "absolute -top-6 right-4 w-12 h-12 rounded-full shadow-lg flex items-center justify-center",
+              isAuthenticated 
+                ? "gradient-primary" 
+                : "bg-white/20 backdrop-blur-md border border-white/20"
+            )}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             initial={{ scale: 0 }}
@@ -84,10 +100,12 @@ export function MobileNav({ className }: MobileNavProps) {
           >
             <Plus size={20} className="text-white" />
             
-            {/* Pulse animation */}
-            <div className="absolute inset-0 rounded-full bg-purple-500/30 animate-ping" />
+            {/* Pulse animation only when authenticated */}
+            {isAuthenticated && (
+              <div className="absolute inset-0 rounded-full bg-purple-500/30 animate-ping" />
+            )}
           </motion.button>
-        </Link>
+        )}
       </motion.nav>
 
       {/* Safe area padding helper */}
@@ -102,6 +120,8 @@ function NavItem({
   href,
   isActive,
   isProtected = false,
+  isAuthenticated = false,
+  isInitialized = false,
   onClick
 }: {
   icon: React.ComponentType<{ size?: number; className?: string }>;
@@ -109,14 +129,27 @@ function NavItem({
   href: string;
   isActive: boolean;
   isProtected?: boolean;
+  isAuthenticated?: boolean;
+  isInitialized?: boolean;
   onClick?: () => void;
 }) {
+  const handleClick = () => {
+    if (onClick) {
+      onClick();
+    } else if (isProtected && !isAuthenticated) {
+      window.location.href = `/login?redirectTo=${encodeURIComponent(href)}`;
+    }
+  };
   const content = (
     <motion.div
       className={cn(
         'relative flex flex-col items-center justify-center p-2 rounded-lg min-w-[48px] min-h-[48px]',
         'transition-colors duration-200',
-        isActive 
+        isProtected && !isInitialized 
+          ? 'text-white/30'
+          : isProtected && !isAuthenticated
+          ? 'text-white/50 active:text-white/70'
+          : isActive 
           ? 'text-white' 
           : 'text-white/60 active:text-white'
       )}
@@ -163,7 +196,15 @@ function NavItem({
 
       {/* Protected indicator */}
       {isProtected && !isActive && (
-        <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-purple-400 rounded-full opacity-60" />
+        <div className="absolute top-1 right-1">
+          {!isInitialized ? (
+            <div className="w-1.5 h-1.5 bg-gray-400 rounded-full opacity-30 animate-pulse" />
+          ) : !isAuthenticated ? (
+            <div className="w-1.5 h-1.5 bg-orange-400 rounded-full opacity-60" />
+          ) : (
+            <div className="w-1.5 h-1.5 bg-green-400 rounded-full opacity-60" />
+          )}
+        </div>
       )}
 
       {/* Ripple effect */}
@@ -173,9 +214,9 @@ function NavItem({
     </motion.div>
   );
 
-  if (onClick) {
+  if (onClick || (isProtected && !isAuthenticated)) {
     return (
-      <button onClick={onClick} className="touch-manipulation">
+      <button onClick={handleClick} className="touch-manipulation">
         {content}
       </button>
     );

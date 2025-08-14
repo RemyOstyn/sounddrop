@@ -4,6 +4,7 @@ import "./globals.css";
 import { APP_NAME, APP_DESCRIPTION } from "@/lib/constants";
 import { Sidebar } from '@/components/layout/sidebar';
 import { MobileNav } from '@/components/layout/mobile-nav';
+import { Toaster } from '@/components/ui/sonner';
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -101,6 +102,9 @@ export default function RootLayout({
           {/* Mobile Navigation */}
           <MobileNav className="md:hidden" />
         </div>
+        
+        {/* Toast Container */}
+        <Toaster />
       </body>
     </html>
   );
