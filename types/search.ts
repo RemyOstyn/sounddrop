@@ -5,11 +5,13 @@ import type { SampleWithDetails, LibraryWithDetails, User, Category } from './da
 export interface SearchSample {
   id: string;
   name: string;
+  fileUrl: string;
   library: {
     id: string;
     name: string;
     user: {
-      name: string | null;
+      username: string | null;
+      displayName: string | null;
     };
   };
 }
@@ -19,7 +21,8 @@ export interface SearchLibrary {
   name: string;
   description: string | null;
   user: {
-    name: string | null;
+    username: string | null;
+    displayName: string | null;
   };
   _count: {
     samples: number;
@@ -28,7 +31,8 @@ export interface SearchLibrary {
 
 export interface SearchUser {
   id: string;
-  name: string | null;
+  username: string | null;
+  displayName: string | null;
   email: string;
   _count: {
     libraries: number;

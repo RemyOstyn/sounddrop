@@ -31,7 +31,7 @@ const navItems = [
 export function MobileNav({ className }: MobileNavProps) {
   const pathname = usePathname();
   const { isAuthenticated, isInitialized } = useAuth();
-  const [isSearchOpen, setIsSearchOpen] = useState(false); // eslint-disable-line @typescript-eslint/no-unused-vars -- TODO: Will be used when search modal is implemented
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const handleSearchClick = () => {
     setIsSearchOpen(true);

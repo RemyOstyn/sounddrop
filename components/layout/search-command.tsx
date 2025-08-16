@@ -18,10 +18,14 @@ import {
   Music,
   Folder,
   User,
-  PlayCircle
+  PlayCircle,
+  Pause,
+  Play
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useDebounce } from '@/hooks/use-debounce';
+import { useAudio, usePlayTracking } from '@/hooks/use-audio';
+import { getUserDisplayName } from '@/lib/user-display-utils';
 import type { SearchApiResponse, SearchSample, SearchLibrary, SearchUser } from '@/types/search';
 
 interface SearchResult {
@@ -29,8 +33,11 @@ interface SearchResult {
   type: 'sample' | 'library' | 'user' | 'category';
   title: string;
   subtitle?: string;
-  href: string;
+  href?: string;
   icon?: React.ReactNode;
+  // Sample-specific data for audio playback
+  fileUrl?: string;
+  sampleData?: SearchSample;
 }
 
 interface SearchCommandProps {
@@ -78,22 +85,23 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
           id: sample.id,
           type: 'sample' as const,
           title: sample.name,
-          subtitle: `${sample.library.user.name} • ${sample.library.name}`,
-          href: `/library/${sample.library.id}?sample=${sample.id}`,
+          subtitle: `${getUserDisplayName(sample.library.user)} • ${sample.library.name}`,
+          fileUrl: sample.fileUrl,
+          sampleData: sample,
           icon: <PlayCircle size={16} className="text-purple-400" />
         })),
         ...(data.libraries || []).map((library: SearchLibrary) => ({
           id: library.id,
           type: 'library' as const,
           title: library.name,
-          subtitle: `${library.user.name} • ${library._count.samples} samples`,
+          subtitle: `${getUserDisplayName(library.user)} • ${library._count.samples} samples`,
           href: `/library/${library.id}`,
           icon: <Folder size={16} className="text-blue-400" />
         })),
         ...(data.users || []).map((user: SearchUser) => ({
           id: user.id,
           type: 'user' as const,
-          title: user.name || user.email,
+          title: getUserDisplayName(user),
           subtitle: `${user._count.libraries} libraries`,
           href: `/user/${user.id}`,
           icon: <User size={16} className="text-green-400" />
@@ -121,10 +129,18 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
     setRecentSearches(newRecent);
     localStorage.setItem('sounddrop-recent-searches', JSON.stringify(newRecent));
     
-    // Navigate and close
-    router.push(result.href);
-    onOpenChange(false);
-    setQuery('');
+    // Handle based on result type
+    if (result.type === 'sample') {
+      // Samples don't navigate - they're handled by the play button
+      return;
+    }
+    
+    // Navigate for libraries and users
+    if (result.href) {
+      router.push(result.href);
+      onOpenChange(false);
+      setQuery('');
+    }
   }, [query, recentSearches, router, onOpenChange]);
 
   // Handle recent search selection
@@ -313,6 +329,29 @@ function SearchResultItem({
   result: SearchResult;
   onSelect: (result: SearchResult) => void;
 }) {
+  // Audio hook for samples
+  const { trackPlay } = usePlayTracking();
+  const audioHook = useAudio(
+    result.id,
+    result.fileUrl || '',
+    result.title,
+    {
+      onPlay: () => trackPlay(result.id)
+    }
+  );
+
+  const isSample = result.type === 'sample';
+  const showPlayButton = isSample && result.fileUrl;
+
+  const handlePlayToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (audioHook.isPlaying) {
+      audioHook.pause();
+    } else {
+      audioHook.play();
+    }
+  };
+
   return (
     <CommandItem
       value={result.title}
@@ -338,9 +377,33 @@ function SearchResultItem({
         )}
       </div>
       
-      <div className="text-white/30 group-hover:text-white/50">
-        <Search size={12} />
-      </div>
+      {showPlayButton && (
+        <motion.button
+          onClick={handlePlayToggle}
+          className="flex-shrink-0 w-8 h-8 rounded-full bg-purple-500/20 hover:bg-purple-500/30 flex items-center justify-center transition-colors"
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          {audioHook.isLoading ? (
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            >
+              <PlayCircle size={14} className="text-purple-400" />
+            </motion.div>
+          ) : audioHook.isPlaying ? (
+            <Pause size={14} className="text-purple-400" />
+          ) : (
+            <Play size={14} className="text-purple-400" />
+          )}
+        </motion.button>
+      )}
+      
+      {!showPlayButton && (
+        <div className="text-white/30 group-hover:text-white/50">
+          <Search size={12} />
+        </div>
+      )}
     </CommandItem>
   );
 }
