@@ -46,7 +46,7 @@ export function CreateLibraryDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const { uploadIcon } = useUpload();
-  const { createLibrary } = useLibraries();
+  const { createLibrary, updateLibrary } = useLibraries();
 
   const form = useForm<CreateLibraryForm>({
     resolver: zodResolver(createLibrarySchema),
@@ -101,33 +101,40 @@ export function CreateLibraryDialog({
     try {
       setIsSubmitting(true);
 
-      let iconUrl: string | null = null;
-
-      // Upload icon if selected
-      if (iconFile) {
-        iconUrl = await uploadIcon(iconFile);
-        if (!iconUrl) {
-          // Upload failed, error should be handled by the hook
-          return;
-        }
-      }
-
-      // Create library
+      // Create library first (without icon)
       const library = await createLibrary({
         name: data.name,
         description: data.description || undefined,
         categoryId: data.categoryId,
-        iconUrl: iconUrl || undefined,
+        iconUrl: undefined,
       });
 
-      if (library) {
-        // Reset form and close dialog
-        form.reset();
-        removeIcon();
-        onOpenChange(false);
-        onSuccess?.(library);
+      if (!library) {
+        // Show error if library creation failed
+        console.error('Failed to create library');
+        return;
       }
 
+      // Reset form and close dialog immediately
+      form.reset();
+      removeIcon();
+      onOpenChange(false);
+      onSuccess?.(library);
+
+      // Upload icon in background if selected
+      if (iconFile) {
+        uploadIcon(iconFile).then((iconUrl) => {
+          if (iconUrl) {
+            // Update library with icon URL
+            updateLibrary(library.id, { iconUrl });
+          }
+        }).catch((error) => {
+          console.error('Icon upload failed:', error);
+        });
+      }
+
+    } catch (error) {
+      console.error('Library creation error:', error);
     } finally {
       setIsSubmitting(false);
     }

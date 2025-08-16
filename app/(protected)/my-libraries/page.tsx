@@ -72,8 +72,8 @@ export default function MyLibrariesPage() {
   }, []);
 
   const handleLibraryClick = (library: LibraryWithDetails) => {
-    // Navigate to library detail page
-    window.location.href = `/library/${library.id}`;
+    // Library detail page not implemented - do nothing
+    console.log('Library clicked:', library.name);
   };
 
   const handleEditLibrary = (library: LibraryWithDetails) => {

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Upload, Music, AlertCircle, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -34,6 +35,7 @@ export default function UploadPage() {
   const { user, userName } = useAuth();
   const { libraries, fetchLibraries } = useLibraries();
   const { isUploading, error, uploadAudio } = useUpload();
+  const searchParams = useSearchParams();
   
   const [selectedLibrary, setSelectedLibrary] = useState<string>('');
   const [audioFiles, setAudioFiles] = useState<AudioFile[]>([]);
@@ -47,6 +49,18 @@ export default function UploadPage() {
       fetchLibraries({ userId: user.id });
     }
   }, [user?.id, fetchLibraries]); // Include fetchLibraries in dependency array per ESLint rule
+
+  // Pre-select library from query parameter
+  useEffect(() => {
+    const libraryId = searchParams.get('library');
+    if (libraryId && libraries.length > 0) {
+      // Check if the library exists and belongs to the user
+      const library = libraries.find(lib => lib.id === libraryId && lib.userId === user?.id);
+      if (library) {
+        setSelectedLibrary(libraryId);
+      }
+    }
+  }, [searchParams, libraries, user?.id]);
 
   const userLibraries = libraries; // In real implementation, filter by current user
 

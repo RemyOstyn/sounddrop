@@ -135,7 +135,10 @@ function LibraryCardComponent({
                         <MoreVertical size={16} />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
+                    <DropdownMenuContent 
+                      align="end"
+                      className="bg-gradient-to-br from-slate-900/95 to-gray-900/95 backdrop-blur-xl border-white/20 text-white"
+                    >
                       {onUpload && (
                         <>
                           <DropdownMenuItem onClick={onUpload}>
@@ -196,16 +199,24 @@ function LibraryCardComponent({
               <Music size={48} className="text-purple-400" />
             )}
             
-            {/* Overlay with actions for owners */}
+            {/* Actions dropdown in top-right corner */}
             {canEdit && (
-              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <div className="absolute top-2 right-2 z-10">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button size="sm" variant="secondary">
-                      <MoreVertical size={16} />
+                    <Button 
+                      size="sm" 
+                      variant="secondary"
+                      className="h-8 w-8 p-0 bg-black/50 hover:bg-black/70 border-white/20"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <MoreVertical size={14} />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="center">
+                  <DropdownMenuContent 
+                    align="end"
+                    className="bg-gradient-to-br from-slate-900/95 to-gray-900/95 backdrop-blur-xl border-white/20 text-white"
+                  >
                     {onUpload && (
                       <>
                         <DropdownMenuItem onClick={onUpload}>

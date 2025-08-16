@@ -55,6 +55,7 @@ model Library {
   @@index([userId])
   @@index([categoryId])
   @@index([isPublic])
+  @@index([userId, name])
 }
 
 model Sample {
