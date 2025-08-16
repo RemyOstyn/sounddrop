@@ -87,12 +87,7 @@ export function MobileNav({ className }: MobileNavProps) {
                 window.location.href = '/upload';
               }
             }}
-            className={cn(
-              "absolute -top-10 right-4 w-12 h-12 rounded-full shadow-lg flex items-center justify-center",
-              isAuthenticated 
-                ? "gradient-primary" 
-                : "bg-white/20 backdrop-blur-md border border-white/20"
-            )}
+            className="absolute -top-16 right-4 w-12 h-12 rounded-full shadow-lg flex items-center justify-center gradient-primary"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             initial={{ scale: 0 }}
@@ -101,10 +96,8 @@ export function MobileNav({ className }: MobileNavProps) {
           >
             <Plus size={20} className="text-white" />
             
-            {/* Pulse animation only when authenticated */}
-            {isAuthenticated && (
-              <div className="absolute inset-0 rounded-full bg-purple-500/30 animate-ping" />
-            )}
+            {/* Pulse animation */}
+            <div className="absolute inset-0 rounded-full bg-purple-500/30 animate-ping" />
           </motion.button>
         )}
       </motion.nav>

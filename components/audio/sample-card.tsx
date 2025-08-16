@@ -209,7 +209,8 @@ export function SampleCard({
       {/* Trending badge */}
       {sample.playCount > 100 && (
         <div className="absolute top-2 right-2 bg-gradient-accent px-2 py-0.5 rounded-full text-xs font-medium text-white">
-          🔥 Trending
+          <span className="sm:hidden">🔥</span>
+          <span className="hidden sm:inline">🔥 Trending</span>
         </div>
       )}
     </motion.div>
