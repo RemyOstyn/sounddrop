@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { Music, TrendingUp, Clock, Users } from 'lucide-react';
 import { SampleGrid, CompactSampleGrid } from '@/components/audio/sample-grid'; // eslint-disable-line @typescript-eslint/no-unused-vars -- TODO: CompactSampleGrid will be used for featured sections
@@ -12,20 +13,20 @@ import type { TabId, TabNavigationProps } from '@/types/ui';
 
 export default function HomePage() {
   const { view, setView } = useViewToggle();
-  const [activeTab, setActiveTab] = useState<TabId>('all');
+  const [activeTab, setActiveTab] = useState<TabId>('trending');
   const { stats, isLoading: isStatsLoading } = useStats();
 
   return (
     <div className="min-h-full bg-gradient-to-br from-transparent via-purple-900/5 to-pink-900/5">
       {/* Hero Section */}
-      <section className="relative px-6 py-12 md:px-8 lg:px-12">
+      <section className="relative px-6 py-6 md:py-12 md:px-8 lg:px-12">
         <div className="mx-auto max-w-7xl">
           {/* Header */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="text-center mb-12"
+            className="text-center mb-6 md:mb-12"
           >
             <h1 className="text-4xl md:text-6xl font-bold text-gradient mb-4">
               SoundDrop
@@ -42,36 +43,47 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-12"
+            className="mb-4 md:mb-12"
           >
-            <StatCard
-              icon={<Music size={20} />}
-              label="Total Samples"
-              value={stats?.totalSamples || (isStatsLoading ? "..." : "0")}
-              gradient="from-purple-500 to-pink-500"
-              isLoading={isStatsLoading}
-            />
-            <StatCard
-              icon={<TrendingUp size={20} />}
-              label="Libraries"
-              value={stats?.totalLibraries || (isStatsLoading ? "..." : "0")}
-              gradient="from-orange-500 to-red-500"
-              isLoading={isStatsLoading}
-            />
-            <StatCard
-              icon={<Clock size={20} />}
-              label="Recent"
-              value={stats?.recentSamples || (isStatsLoading ? "..." : "0")}
-              gradient="from-blue-500 to-cyan-500"
-              isLoading={isStatsLoading}
-            />
-            <StatCard
-              icon={<Users size={20} />}
-              label="Users"
-              value={stats?.totalUsers || (isStatsLoading ? "..." : "0")}
-              gradient="from-green-500 to-emerald-500"
-              isLoading={isStatsLoading}
-            />
+            {/* Mobile Stats - Single Row */}
+            <div className="md:hidden">
+              <MobileStatsRow
+                stats={stats}
+                isLoading={isStatsLoading}
+              />
+            </div>
+            
+            {/* Desktop Stats - Grid */}
+            <div className="hidden md:grid md:grid-cols-4 gap-4">
+              <StatCard
+                icon={<Music size={20} />}
+                label="Total Samples"
+                value={stats?.totalSamples || (isStatsLoading ? "..." : "0")}
+                gradient="from-purple-500 to-pink-500"
+                isLoading={isStatsLoading}
+              />
+              <StatCard
+                icon={<TrendingUp size={20} />}
+                label="Libraries"
+                value={stats?.totalLibraries || (isStatsLoading ? "..." : "0")}
+                gradient="from-orange-500 to-red-500"
+                isLoading={isStatsLoading}
+              />
+              <StatCard
+                icon={<Clock size={20} />}
+                label="Recent"
+                value={stats?.recentSamples || (isStatsLoading ? "..." : "0")}
+                gradient="from-blue-500 to-cyan-500"
+                isLoading={isStatsLoading}
+              />
+              <StatCard
+                icon={<Users size={20} />}
+                label="Users"
+                value={stats?.totalUsers || (isStatsLoading ? "..." : "0")}
+                gradient="from-green-500 to-emerald-500"
+                isLoading={isStatsLoading}
+              />
+            </div>
           </motion.div>
         </div>
       </section>
@@ -84,7 +96,7 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8"
+            className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 md:mb-8"
           >
             <div>
               <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">
@@ -105,7 +117,7 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="mb-8"
+            className="mb-4 md:mb-8"
           >
             <TabNavigation
               activeTab={activeTab}
@@ -185,6 +197,47 @@ function StatCard({
         </div>
       </div>
     </motion.div>
+  );
+}
+
+function MobileStatsRow({
+  stats,
+  isLoading
+}: {
+  stats: {
+    totalSamples?: string;
+    totalLibraries?: string;
+    recentSamples?: string;
+    totalUsers?: string;
+  } | null;
+  isLoading: boolean;
+}) {
+  const statItems = [
+    { icon: <Music size={16} />, value: stats?.totalSamples || (isLoading ? "..." : "0"), label: "Samples" },
+    { icon: <TrendingUp size={16} />, value: stats?.totalLibraries || (isLoading ? "..." : "0"), label: "Libraries" },
+    { icon: <Clock size={16} />, value: stats?.recentSamples || (isLoading ? "..." : "0"), label: "Recent" },
+    { icon: <Users size={16} />, value: stats?.totalUsers || (isLoading ? "..." : "0"), label: "Users" }
+  ];
+
+  return (
+    <div className="glass rounded-lg p-1.5">
+      <div className="grid grid-cols-4 gap-0.5">
+        {statItems.map((item, index) => (
+          <div key={index} className="text-center py-1">
+            <div className="flex justify-center mb-0.5">
+              <div className="text-white/70">{React.cloneElement(item.icon as React.ReactElement<{ size?: number }>, { size: 12 })}</div>
+            </div>
+            <div className={cn(
+              "text-xs font-bold text-white leading-none",
+              isLoading && "animate-pulse"
+            )}>
+              {item.value}
+            </div>
+            <div className="text-[10px] text-white/60 leading-none mt-0.5">{item.label}</div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 

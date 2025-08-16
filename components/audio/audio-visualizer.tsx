@@ -71,7 +71,7 @@ export function AudioVisualizer({
       // Progress indicator
       if (duration > 0) {
         const progress = currentTime / duration;
-        const progressX = progress * canvas.width;
+        const progressX = progress * (canvas.width / window.devicePixelRatio);
         
         // Draw progress line
         ctx.strokeStyle = color;

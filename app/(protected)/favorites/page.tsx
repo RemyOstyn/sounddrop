@@ -36,13 +36,13 @@ export default function FavoritesPage() {
   };
 
   return (
-    <div className="min-h-screen pt-24 pb-8">
+    <div className="min-h-screen pt-20 md:pt-24 pb-8">
       <div className="max-w-7xl mx-auto px-6">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
+          className="mb-4 md:mb-8"
         >
           <div className="flex items-center space-x-3 mb-4">
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-500/20 to-pink-500/20 flex items-center justify-center">
@@ -75,7 +75,7 @@ export default function FavoritesPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="flex flex-col sm:flex-row gap-4 mb-8"
+          className="flex flex-col sm:flex-row gap-4 mb-4 md:mb-8"
         >
           {/* Search */}
           <div className="relative flex-1">

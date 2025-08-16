@@ -42,7 +42,7 @@ export function MobileNav({ className }: MobileNavProps) {
       <motion.nav
         className={cn(
           'fixed bottom-0 left-0 right-0 z-50 md:hidden',
-          'glass border-t border-white/10',
+          'bg-black/80 backdrop-blur-xl border-t border-white/20',
           'safe-area-pb',
           className
         )}
@@ -51,7 +51,7 @@ export function MobileNav({ className }: MobileNavProps) {
         transition={{ duration: 0.3, ease: 'easeOut' }}
       >
         {/* Background gradient */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-black/20 pointer-events-none" />
         
         <div className="relative px-4 py-2">
           <div className="flex items-center justify-around">
@@ -87,7 +87,7 @@ export function MobileNav({ className }: MobileNavProps) {
               }
             }}
             className={cn(
-              "absolute -top-6 right-4 w-12 h-12 rounded-full shadow-lg flex items-center justify-center",
+              "absolute -top-10 right-4 w-12 h-12 rounded-full shadow-lg flex items-center justify-center",
               isAuthenticated 
                 ? "gradient-primary" 
                 : "bg-white/20 backdrop-blur-md border border-white/20"

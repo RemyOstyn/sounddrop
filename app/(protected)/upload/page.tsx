@@ -2,17 +2,21 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, Music, AlertCircle, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AudioDropzone, AudioFileList } from '@/components/upload/audio-dropzone';
+import { MobileAudioUpload } from '@/components/upload/mobile-audio-upload';
 import { UploadProgress } from '@/components/upload/upload-progress';
+import { LibrarySelector } from '@/components/upload/library-selector';
+import { CreateLibraryFormInline } from '@/components/upload/create-library-form';
+import { CreateLibrarySheet } from '@/components/upload/create-library-sheet';
 import { useAuth } from '@/hooks/use-auth';
 import { useLibraries } from '@/hooks/use-libraries';
 import { useUpload } from '@/hooks/use-upload';
+import { LibraryWithDetails, Category } from '@/types/database';
 import { toast } from 'sonner';
 
 interface AudioFile {
@@ -41,6 +45,21 @@ export default function UploadPage() {
   const [audioFiles, setAudioFiles] = useState<AudioFile[]>([]);
   const [uploads, setUploads] = useState<UploadItem[]>([]);
   const [activeTab, setActiveTab] = useState<'select' | 'upload'>('select');
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showCreateSheet, setShowCreateSheet] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Check if mobile on mount
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Fetch user libraries on mount (single call)
   // Note: In development, React.StrictMode may cause this to run twice - this is expected behavior
@@ -49,6 +68,23 @@ export default function UploadPage() {
       fetchLibraries({ userId: user.id });
     }
   }, [user?.id, fetchLibraries]); // Include fetchLibraries in dependency array per ESLint rule
+
+  // Fetch categories for library creation
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch('/api/categories');
+        if (response.ok) {
+          const result = await response.json();
+          setCategories(result.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch categories:', error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   // Pre-select library from query parameter
   useEffect(() => {
@@ -62,7 +98,7 @@ export default function UploadPage() {
     }
   }, [searchParams, libraries, user?.id]);
 
-  const userLibraries = libraries; // In real implementation, filter by current user
+  const userLibraries = libraries.filter(lib => lib.userId === user?.id) || [];
 
   const handleFilesAdded = useCallback((files: AudioFile[]) => {
     setAudioFiles(prev => [...prev, ...files]);
@@ -80,6 +116,29 @@ export default function UploadPage() {
     setAudioFiles(prev => prev.map((file, i) => 
       i === index ? { ...file, name } : file
     ));
+  }, []);
+
+  const handleCreateLibrary = useCallback(() => {
+    if (isMobile) {
+      setShowCreateSheet(true);
+    } else {
+      setShowCreateForm(true);
+    }
+  }, [isMobile]);
+
+  const handleLibraryCreated = useCallback((library: LibraryWithDetails) => {
+    setSelectedLibrary(library.id);
+    setShowCreateForm(false);
+    setShowCreateSheet(false);
+    // Refresh libraries to include the new one
+    if (user?.id) {
+      fetchLibraries({ userId: user.id });
+    }
+    toast.success('Library created successfully!');
+  }, [user?.id, fetchLibraries]);
+
+  const handleCancelCreate = useCallback(() => {
+    setShowCreateForm(false);
   }, []);
 
   const handleStartUpload = useCallback(async () => {
@@ -224,61 +283,64 @@ export default function UploadPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
                     <Music size={20} />
-                    <span>Select Library</span>
+                    <span>Choose Library</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {userLibraries.length > 0 ? (
-                    <Select value={selectedLibrary} onValueChange={setSelectedLibrary}>
-                      <SelectTrigger className="bg-white/5 border-white/20">
-                        <SelectValue placeholder="Choose a library for your samples" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {userLibraries.map((library) => (
-                          <SelectItem key={library.id} value={library.id}>
-                            <div className="flex items-center space-x-2">
-                              <span>{library.name}</span>
-                              <span className="text-xs text-white/60">
-                                ({library._count.samples} samples)
-                              </span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <div className="text-center py-8">
-                      <Music size={32} className="mx-auto text-white/60 mb-4" />
-                      <p className="text-white/80 mb-2">No libraries found</p>
-                      <p className="text-white/60 text-sm">
-                        Create a library first to organize your samples
-                      </p>
-                      <Button
-                        variant="outline"
-                        className="mt-4"
-                        onClick={() => window.location.href = '/my-libraries'}
+                  <AnimatePresence mode="wait">
+                    {showCreateForm ? (
+                      <CreateLibraryFormInline
+                        key="create-form"
+                        categories={categories}
+                        onSuccess={handleLibraryCreated}
+                        onCancel={handleCancelCreate}
+                      />
+                    ) : (
+                      <motion.div
+                        key="selector"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
                       >
-                        Create Library
-                      </Button>
-                    </div>
-                  )}
+                        <LibrarySelector
+                          libraries={userLibraries}
+                          selectedLibrary={selectedLibrary}
+                          onLibrarySelect={setSelectedLibrary}
+                          onCreateNew={handleCreateLibrary}
+                        />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </CardContent>
               </Card>
 
               {/* File Upload */}
-              <AudioDropzone
-                onFilesAdded={handleFilesAdded}
-                disabled={!selectedLibrary}
-              />
-
-              {/* Selected Files */}
-              {audioFiles.length > 0 && (
-                <AudioFileList
+              {isMobile ? (
+                <MobileAudioUpload
+                  onFilesAdded={handleFilesAdded}
                   files={audioFiles}
                   onRemoveFile={handleRemoveFile}
-                  onUpdateName={handleUpdateFileName}
+                  onUpdateFileName={handleUpdateFileName}
+                  disabled={!selectedLibrary || showCreateForm}
                 />
+              ) : (
+                <>
+                  <AudioDropzone
+                    onFilesAdded={handleFilesAdded}
+                    disabled={!selectedLibrary || showCreateForm}
+                  />
+                  
+                  {/* Selected Files */}
+                  {audioFiles.length > 0 && (
+                    <AudioFileList
+                      files={audioFiles}
+                      onRemoveFile={handleRemoveFile}
+                      onUpdateName={handleUpdateFileName}
+                    />
+                  )}
+                </>
               )}
+
 
               {/* Upload Button */}
               {validAudioFiles.length > 0 && (
@@ -378,6 +440,14 @@ export default function UploadPage() {
             </TabsContent>
           </Tabs>
         </motion.div>
+        
+        {/* Mobile Create Library Sheet */}
+        <CreateLibrarySheet
+          open={showCreateSheet}
+          onOpenChange={setShowCreateSheet}
+          categories={categories}
+          onSuccess={handleLibraryCreated}
+        />
       </div>
     </div>
   );

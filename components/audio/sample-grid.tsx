@@ -99,7 +99,7 @@ export function SampleGrid({
 
   // Grid layout classes
   const gridClasses = {
-    grid: 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4',
+    grid: 'grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4',
     list: 'flex flex-col space-y-3'
   };
 
@@ -245,7 +245,7 @@ export function CompactSampleGrid({
   const displaySamples = samples.slice(0, maxItems);
 
   const gridClasses = {
-    grid: 'grid grid-cols-2 sm:grid-cols-3 gap-3',
+    grid: 'grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-3 gap-3',
     list: 'flex flex-col space-y-2'
   };
 

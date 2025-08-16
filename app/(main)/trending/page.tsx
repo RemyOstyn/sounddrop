@@ -16,7 +16,7 @@ export default function TrendingPage() {
   return (
     <div className="min-h-full">
       {/* Header */}
-      <section className="px-6 py-8 md:px-8 lg:px-12 border-b border-white/10">
+      <section className="px-6 py-4 md:py-8 md:px-8 lg:px-12 border-b border-white/10">
         <div className="mx-auto max-w-7xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -46,7 +46,7 @@ export default function TrendingPage() {
       </section>
 
       {/* Period Selector */}
-      <section className="px-6 py-6 md:px-8 lg:px-12 border-b border-white/10">
+      <section className="px-6 py-3 md:py-6 md:px-8 lg:px-12 border-b border-white/10">
         <div className="mx-auto max-w-7xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -62,7 +62,7 @@ export default function TrendingPage() {
       </section>
 
       {/* Trending Samples */}
-      <section className="px-6 py-8 pb-24 md:px-8 lg:px-12">
+      <section className="px-6 py-4 pb-24 md:py-8 md:px-8 lg:px-12">
         <div className="mx-auto max-w-7xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -128,8 +128,8 @@ function PeriodSelector({
             key={period.id}
             onClick={() => onPeriodChange(period.id)}
             className={cn(
-              'relative glass glass-hover rounded-lg p-4 text-left transition-all duration-200',
-              'min-w-[200px] flex-1',
+              'relative glass glass-hover rounded-lg p-3 md:p-4 text-left transition-all duration-200',
+              'min-w-[160px] md:min-w-[200px] flex-1',
               activePeriod === period.id
                 ? 'bg-white/10 border-white/20'
                 : 'border-white/5'
