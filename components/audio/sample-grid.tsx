@@ -14,7 +14,7 @@ interface SampleGridProps {
   filters?: SampleFilters;
   className?: string;
   onSamplePlay?: (sampleId: string) => void;
-  onSampleFavorite?: (sampleId: string, isFavorited: boolean) => void;
+  onSampleFavorite?: (sampleId: string) => void;
   getUserFavorites?: (sampleIds: string[]) => Record<string, boolean>;
 }
 
@@ -25,7 +25,7 @@ export function SampleGrid({
   className,
   onSamplePlay, // eslint-disable-line @typescript-eslint/no-unused-vars -- TODO: Will be used for global audio state management
   onSampleFavorite,
-  getUserFavorites // eslint-disable-line @typescript-eslint/no-unused-vars -- TODO: Will be used for user-specific favorite state
+  getUserFavorites
 }: SampleGridProps) {
   const [userFavorites, setUserFavorites] = useState<Record<string, boolean>>({});
 
@@ -86,10 +86,19 @@ export function SampleGrid({
     refresh();
   }, [filters, refresh]);
 
+  // Update user favorites when samples change
+  useEffect(() => {
+    if (displaySamples.length > 0 && getUserFavorites) {
+      const sampleIds = displaySamples.map(sample => sample.id);
+      const favorites = getUserFavorites(sampleIds);
+      setUserFavorites(favorites);
+    }
+  }, [displaySamples, getUserFavorites]);
+
   // Handle favorite toggle
   const handleFavoriteToggle = useCallback((sampleId: string, isFavorited: boolean) => {
     setUserFavorites(prev => ({ ...prev, [sampleId]: isFavorited }));
-    onSampleFavorite?.(sampleId, isFavorited);
+    onSampleFavorite?.(sampleId);
   }, [onSampleFavorite]);
 
   // Handle refresh

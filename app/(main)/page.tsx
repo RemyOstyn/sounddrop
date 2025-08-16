@@ -8,6 +8,7 @@ import { SampleGrid, CompactSampleGrid } from '@/components/audio/sample-grid'; 
 import { ViewToggle, useViewToggle } from '@/components/shared/view-toggle';
 import { GridSkeleton } from '@/components/shared/skeleton-loader'; // eslint-disable-line @typescript-eslint/no-unused-vars -- TODO: GridSkeleton will be used for loading states
 import { useStats } from '@/hooks/use-stats';
+import { useFavorites } from '@/hooks/use-favorites';
 import { cn } from '@/lib/utils';
 import type { TabId, TabNavigationProps } from '@/types/ui';
 
@@ -15,6 +16,7 @@ export default function HomePage() {
   const { view, setView } = useViewToggle();
   const [activeTab, setActiveTab] = useState<TabId>('trending');
   const { stats, isLoading: isStatsLoading } = useStats();
+  const { toggleFavorite, isFavorite } = useFavorites();
 
   return (
     <div className="min-h-full bg-gradient-to-br from-transparent via-purple-900/5 to-pink-900/5">
@@ -141,6 +143,20 @@ export default function HomePage() {
               filters={{
                 ...(activeTab === 'trending' && { sortBy: 'playCount' as const }),
                 ...(activeTab === 'recent' && { sortBy: 'createdAt' as const })
+              }}
+              onSampleFavorite={async (sampleId: string) => {
+                try {
+                  await toggleFavorite(sampleId);
+                } catch (error) {
+                  console.error('Failed to toggle favorite:', error);
+                }
+              }}
+              getUserFavorites={(sampleIds: string[]) => {
+                const favorites: Record<string, boolean> = {};
+                sampleIds.forEach(id => {
+                  favorites[id] = isFavorite(id);
+                });
+                return favorites;
               }}
             />
           </motion.div>
