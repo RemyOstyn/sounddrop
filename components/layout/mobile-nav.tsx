@@ -14,6 +14,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
+import { SearchCommand } from './search-command';
 
 interface MobileNavProps {
   className?: string;
@@ -22,7 +23,7 @@ interface MobileNavProps {
 const navItems = [
   { icon: Home, label: 'Home', href: '/' },
   { icon: TrendingUp, label: 'Trending', href: '/trending' },
-  { icon: Search, label: 'Search', href: '/search' },
+  { icon: Search, label: 'Search', href: '/search', isSearch: true },
   { icon: Heart, label: 'Favorites', href: '/favorites', protected: true },
   { icon: Settings, label: 'Settings', href: '/settings', protected: true },
 ];
@@ -56,8 +57,7 @@ export function MobileNav({ className }: MobileNavProps) {
         <div className="relative px-4 py-2">
           <div className="flex items-center justify-around">
             {navItems.map((item) => { // Removed unused 'index' parameter
-              const isActive = pathname === item.href;
-              const isSearch = item.label === 'Search';
+              const isActive = pathname === item.href && !item.isSearch;
               
               return (
                 <NavItem
@@ -69,7 +69,8 @@ export function MobileNav({ className }: MobileNavProps) {
                   isProtected={item.protected}
                   isAuthenticated={isAuthenticated}
                   isInitialized={isInitialized}
-                  onClick={isSearch ? handleSearchClick : undefined}
+                  onClick={item.isSearch ? handleSearchClick : undefined}
+                  isSearch={item.isSearch}
                 />
               );
             })}
@@ -110,6 +111,12 @@ export function MobileNav({ className }: MobileNavProps) {
 
       {/* Safe area padding helper */}
       <div className="h-20 md:hidden" /> {/* Spacer for fixed nav */}
+
+      {/* Search Modal */}
+      <SearchCommand 
+        open={isSearchOpen} 
+        onOpenChange={setIsSearchOpen}
+      />
     </>
   );
 }
@@ -122,7 +129,8 @@ function NavItem({
   isProtected = false,
   isAuthenticated = false,
   isInitialized = false,
-  onClick
+  onClick,
+  isSearch = false
 }: {
   icon: React.ComponentType<{ size?: number; className?: string }>;
   label: string;
@@ -132,6 +140,7 @@ function NavItem({
   isAuthenticated?: boolean;
   isInitialized?: boolean;
   onClick?: () => void;
+  isSearch?: boolean;
 }) {
   const handleClick = () => {
     if (onClick) {
@@ -214,7 +223,7 @@ function NavItem({
     </motion.div>
   );
 
-  if (onClick || (isProtected && !isAuthenticated)) {
+  if (onClick || (isProtected && !isAuthenticated) || isSearch) {
     return (
       <button onClick={handleClick} className="touch-manipulation">
         {content}
