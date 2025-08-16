@@ -298,7 +298,10 @@ export function SampleCard({
 
       {/* Delete confirmation dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+        <AlertDialogContent 
+          onClick={(e) => e.stopPropagation()}
+          className="sm:max-w-md bg-gradient-to-br from-slate-900/95 to-gray-900/95 backdrop-blur-xl border-white/20 text-white"
+        >
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Sample</AlertDialogTitle>
             <AlertDialogDescription>
@@ -491,7 +494,10 @@ function ListSampleCard({
 
       {/* Delete confirmation dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+        <AlertDialogContent 
+          onClick={(e) => e.stopPropagation()}
+          className="sm:max-w-md bg-gradient-to-br from-slate-900/95 to-gray-900/95 backdrop-blur-xl border-white/20 text-white"
+        >
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Sample</AlertDialogTitle>
             <AlertDialogDescription>
