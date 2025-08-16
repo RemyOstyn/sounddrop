@@ -15,6 +15,7 @@ interface SampleGridProps {
   className?: string;
   onSamplePlay?: (sampleId: string) => void;
   onSampleFavorite?: (sampleId: string) => void;
+  onSampleDelete?: (sampleId: string) => void;
   getUserFavorites?: (sampleIds: string[]) => Record<string, boolean>;
 }
 
@@ -25,9 +26,11 @@ export function SampleGrid({
   className,
   onSamplePlay, // eslint-disable-line @typescript-eslint/no-unused-vars -- TODO: Will be used for global audio state management
   onSampleFavorite,
+  onSampleDelete,
   getUserFavorites
 }: SampleGridProps) {
   const [userFavorites, setUserFavorites] = useState<Record<string, boolean>>({});
+  const [deletedSamples, setDeletedSamples] = useState<Set<string>>(new Set());
 
   // Fetcher function for infinite scroll
   const fetcher = useCallback(async (page: number, pageSize: number) => {
@@ -101,6 +104,12 @@ export function SampleGrid({
     onSampleFavorite?.(sampleId);
   }, [onSampleFavorite]);
 
+  // Handle sample deletion
+  const handleSampleDelete = useCallback((sampleId: string) => {
+    setDeletedSamples(prev => new Set([...prev, sampleId]));
+    onSampleDelete?.(sampleId);
+  }, [onSampleDelete]);
+
   // Handle refresh
   const handleRefresh = useCallback(() => {
     refresh();
@@ -154,7 +163,7 @@ export function SampleGrid({
   }
 
   // Empty state
-  if (!isLoading && displaySamples.length === 0) {
+  if (!isLoading && displaySamples.filter(sample => !deletedSamples.has(sample.id)).length === 0) {
     return (
       <div className={cn('w-full flex flex-col items-center justify-center py-12', className)}>
         <motion.div
@@ -188,21 +197,24 @@ export function SampleGrid({
         className={gridClasses[view]}
         transition={{ duration: 0.2, ease: "easeOut" }}
       >
-        {displaySamples.map((sample) => (
-          <motion.div
-            key={sample.id}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.15 }}
-          >
-            <SampleCard
-              sample={sample}
-              view={view}
-              isUserFavorited={userFavorites[sample.id] || false}
-              onFavoriteToggle={handleFavoriteToggle}
-            />
-          </motion.div>
-        ))}
+        {displaySamples
+          .filter(sample => !deletedSamples.has(sample.id))
+          .map((sample) => (
+            <motion.div
+              key={sample.id}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.15 }}
+            >
+              <SampleCard
+                sample={sample}
+                view={view}
+                isUserFavorited={userFavorites[sample.id] || false}
+                onFavoriteToggle={handleFavoriteToggle}
+                onDelete={handleSampleDelete}
+              />
+            </motion.div>
+          ))}
       </motion.div>
 
       {/* Load More Trigger */}
@@ -222,7 +234,7 @@ export function SampleGrid({
       )}
 
       {/* End Message */}
-      {!hasNextPage && displaySamples.length > 0 && (
+      {!hasNextPage && displaySamples.filter(sample => !deletedSamples.has(sample.id)).length > 0 && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -231,7 +243,7 @@ export function SampleGrid({
         >
           <div className="inline-flex items-center space-x-2 px-4 py-2 text-white/50 text-sm">
             <span>🎉</span>
-            <span>You&apos;ve reached the end! {displaySamples.length} samples loaded.</span>
+            <span>You&apos;ve reached the end! {displaySamples.filter(sample => !deletedSamples.has(sample.id)).length} samples loaded.</span>
           </div>
         </motion.div>
       )}

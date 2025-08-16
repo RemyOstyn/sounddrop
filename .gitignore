@@ -56,3 +56,6 @@ next-env.d.ts
 Thumbs.db
 .DS_Store
 .DS_Store?
+
+# MCP file
+.mcp.json

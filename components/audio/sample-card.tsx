@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Heart, MoreVertical, Users, TrendingUp } from 'lucide-react';
+import { Heart, MoreVertical, Users, TrendingUp, Trash2 } from 'lucide-react';
 import Image from 'next/image';
 import { PlayButton, CompactPlayButton } from './play-button';
 import { AudioVisualizer, MiniVisualizer } from './audio-visualizer';
@@ -9,6 +9,25 @@ import { useAudio, usePlayTracking } from '@/hooks/use-audio';
 import { SampleWithDetails } from '@/types/database';
 import { cn } from '@/lib/utils';
 import { getUserDisplayName } from '@/lib/user-display-utils';
+import { useAuth } from '@/hooks/use-auth';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { useState } from 'react';
+import { toast } from 'sonner';
 
 interface SampleCardProps {
   sample: SampleWithDetails;
@@ -17,6 +36,7 @@ interface SampleCardProps {
   showFavoriteCount?: boolean;
   isUserFavorited?: boolean;
   onFavoriteToggle?: (sampleId: string, isFavorited: boolean) => void;
+  onDelete?: (sampleId: string) => void;
   className?: string;
 }
 
@@ -27,9 +47,13 @@ export function SampleCard({
   showFavoriteCount = true,
   isUserFavorited = false,
   onFavoriteToggle,
+  onDelete,
   className
 }: SampleCardProps) {
+  const { user } = useAuth();
   const { trackPlay } = usePlayTracking();
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   const {
     play,
@@ -61,6 +85,31 @@ export function SampleCard({
     }
   };
 
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/samples/${sample.id}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        toast.success('Sample deleted successfully');
+        onDelete?.(sample.id);
+      } else {
+        const error = await response.json();
+        toast.error(error.error || 'Failed to delete sample');
+      }
+    } catch (error) {
+      console.error('Error deleting sample:', error);
+      toast.error('Failed to delete sample');
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteDialog(false);
+    }
+  };
+
+  const isOwner = user?.id === sample.library.userId;
+
   if (view === 'list') {
     return <ListSampleCard {...{
       sample,
@@ -77,6 +126,11 @@ export function SampleCard({
       isUserFavorited,
       handleFavoriteToggle,
       handleCardClick,
+      isOwner,
+      showDeleteDialog,
+      setShowDeleteDialog,
+      handleDelete,
+      isDeleting,
       className
     }} />;
   }
@@ -131,16 +185,6 @@ export function SampleCard({
             )}
           </div>
         </div>
-        
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            // TODO: Implement more options menu
-          }}
-          className="opacity-0 group-hover:opacity-100 p-1 rounded-md hover:bg-white/10 transition-all duration-200"
-        >
-          <MoreVertical size={14} className="text-white/60" />
-        </button>
       </div>
 
       {/* Visualizer */}
@@ -213,6 +257,66 @@ export function SampleCard({
           <span className="hidden sm:inline">🔥 Trending</span>
         </div>
       )}
+
+      {/* Owner dropdown menu - positioned below trending badge when both present */}
+      {isOwner && (
+        <div 
+          className={cn(
+            "absolute opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-30",
+            sample.playCount > 100 ? "top-10 right-2" : "top-2 right-2"
+          )}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                onClick={(e) => e.stopPropagation()}
+                className="p-1 rounded-md hover:bg-white/10 transition-all duration-200"
+              >
+                <MoreVertical size={14} className="text-white/60" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              className="bg-gradient-to-br from-slate-900/95 to-gray-900/95 backdrop-blur-xl border-white/20 text-white w-48 z-50"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowDeleteDialog(true);
+                }}
+                className="text-red-400 focus:text-red-300"
+              >
+                <Trash2 size={14} className="mr-2" />
+                Delete Sample
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      )}
+
+      {/* Delete confirmation dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Sample</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete &quot;{sample.name}&quot;? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </motion.div>
   );
 }
@@ -232,6 +336,11 @@ function ListSampleCard({
   isUserFavorited,
   handleFavoriteToggle,
   handleCardClick,
+  isOwner,
+  showDeleteDialog,
+  setShowDeleteDialog,
+  handleDelete,
+  isDeleting,
   className
 }: {
   sample: SampleWithDetails;
@@ -248,6 +357,11 @@ function ListSampleCard({
   isUserFavorited: boolean;
   handleFavoriteToggle: () => void;
   handleCardClick: () => void;
+  isOwner: boolean;
+  showDeleteDialog: boolean;
+  setShowDeleteDialog: (show: boolean) => void;
+  handleDelete: () => void;
+  isDeleting: boolean;
   className?: string;
 }) {
   return (
@@ -342,9 +456,60 @@ function ListSampleCard({
                 <span>{sample._count.favorites}</span>
               </motion.button>
             )}
+
+            {isOwner && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    onClick={(e) => e.stopPropagation()}
+                    className="opacity-0 group-hover:opacity-100 p-1 rounded-md hover:bg-white/10 transition-all duration-200"
+                  >
+                    <MoreVertical size={12} className="text-white/60" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  className="bg-gradient-to-br from-slate-900/95 to-gray-900/95 backdrop-blur-xl border-white/20 text-white w-48"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowDeleteDialog(true);
+                    }}
+                    className="text-red-400 focus:text-red-300"
+                  >
+                    <Trash2 size={12} className="mr-2" />
+                    Delete Sample
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Delete confirmation dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Sample</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete &quot;{sample.name}&quot;? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Background gradient on hover */}
       <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
