@@ -27,6 +27,7 @@ npm run db:push        # Push schema to database
 npm run db:seed        # Seed with default categories
 npm run db:studio      # Open Prisma Studio
 npm run db:reset       # Reset database (dev only)
+npm run db:migrate-usernames  # Migrate existing users to username system
 ```
 
 ## Architecture & Tech Stack
@@ -49,8 +50,10 @@ npm run db:reset       # Reset database (dev only)
 - **Client-side**: Browser client in `/lib/supabase/client.ts`
 - **Server-side**: Server client with cookie handling in `/lib/supabase/server.ts` 
 - **Middleware**: Auth session management in `/middleware.ts` using `/lib/supabase/middleware.ts`
-- **Protected Routes**: `/favorites`, `/my-libraries`, `/upload` require authentication
+- **Protected Routes**: `/favorites`, `/my-libraries`, `/upload`, `/settings` require authentication
 - **OAuth**: Google provider configured for one-click login
+- **Privacy System**: Username-based identity with `/lib/username-utils.ts` and `/lib/user-display-utils.ts`
+- **User Settings**: Complete profile management with real-time validation
 
 ### Storage Architecture (Supabase Storage)
 - **audio-samples** bucket: Public, 50MB limit, supports mp3/wav/mp4/ogg
@@ -88,8 +91,9 @@ Category (pre-defined)
 
 ### Authentication States
 - **Unauthenticated**: Can browse and play all public content
-- **Authenticated**: Can favorite, upload, create libraries, manage personal content
+- **Authenticated**: Can favorite, upload, create libraries, manage personal content, access settings
 - **Session Management**: Automatic refresh via middleware on all routes
+- **Privacy Model**: Auto-generated usernames protect real identity, customizable display names
 
 ### UI Design System
 - **Theme**: Dark mode with glassmorphism effects and backdrop blur
@@ -135,6 +139,15 @@ Category (pre-defined)
 - Real-time library and sample management
 - Full integration with Supabase Storage for audio and icons
 
+**✅ LATEST UPDATE**: Privacy-First Username System (August 2025)
+- Complete privacy overhaul with username-based identity system
+- Auto-generated usernames (format: prefix_from_email + random_suffix)
+- User settings page (/settings) for username/displayName management
+- Real-time username validation and availability checking
+- Migration system for existing users with automated username assignment
+- Privacy protection ensuring real names are never exposed publicly
+- Comprehensive username utilities and validation schemas
+
 ## Environment Setup
 
 **Required**: Create `.env.local` from `.env.example` with:
@@ -143,6 +156,36 @@ Category (pre-defined)
 - File upload limits and allowed MIME types
 
 **Supabase Setup**: Follow detailed guide in `/docs/setup/supabase-setup-guide.md`
+
+## Recent Updates & Important Changes
+
+### Username System Implementation (August 2025)
+The application has been updated with a comprehensive privacy-first username system:
+
+**Key Changes for Developers:**
+- User model now includes `username` and `displayName` fields (both unique)
+- Real names from Google OAuth are never stored or displayed publicly
+- All public displays use `getUserDisplayName()` utility from `/lib/user-display-utils.ts`
+- Username validation and generation handled by `/lib/username-utils.ts`
+- Migration script available: `npm run db:migrate-usernames`
+
+**Database Schema Updates:**
+```sql
+-- New User fields (already applied)
+username: String @unique  // Auto-generated, user-customizable
+displayName: String? @unique  // Optional friendly name
+```
+
+**API Updates:**
+- All user-facing APIs now return `username`/`displayName` instead of `name`
+- New endpoints: `/api/user/settings`, `/api/user/check-username`, `/api/user/sync`
+- User settings page available at `/settings` (protected route)
+
+**Development Practices:**
+- Always use `getUserDisplayName(user)` for displaying user names
+- Never access `user.name` directly in UI components
+- Use username validation utilities when handling user input
+- Test with the migration script for existing user data
 
 ## Database Operations
 
@@ -163,7 +206,7 @@ npm run db:studio   # Visual database browser
 app/
 ├── (main)/              # Public pages (home, category, trending)
 ├── (auth)/              # Authentication pages (login, logout)
-├── (protected)/         # Authenticated user pages (favorites, libraries, upload)
+├── (protected)/         # Authenticated user pages (favorites, libraries, upload, settings)
 └── api/                 # REST API routes with proper auth validation
 ```
 
@@ -187,6 +230,9 @@ lib/stores/
 
 hooks/
 ├── use-*.ts             # Custom hooks for data fetching and state management
+├── use-auth.ts          # Authentication state and user session management
+├── use-user-settings.ts # User settings management with real-time validation
+├── use-favorites.ts     # Favorites system with optimistic updates
 ```
 
 ### Supabase Integration
@@ -199,6 +245,9 @@ hooks/
 - Client singleton in `/lib/prisma.ts` 
 - Type definitions in `/types/database.ts`
 - Utilities for validation, formatting in `/lib/utils.ts`
+- Username system utilities in `/lib/username-utils.ts`
+- User display helpers in `/lib/user-display-utils.ts`
+- Migration scripts in `/scripts/` for schema updates
 
 ## Current Application Features
 
@@ -208,10 +257,13 @@ hooks/
 - Volume control and audio processing with Web Audio API
 - Play count tracking for trending algorithm
 
-**🔐 Authentication**:
+**🔐 Authentication & Privacy**:
 - Google OAuth via Supabase Auth
+- Privacy-first username system with auto-generated usernames
 - Protected routes with automatic redirects
-- User profile management and session persistence
+- User settings page for username/displayName customization
+- Real-time username validation and availability checking
+- Complete privacy protection (real names never exposed)
 
 **📚 Content Management**:
 - Browse samples by category and library
@@ -224,6 +276,8 @@ hooks/
 - Create and manage custom libraries with icons
 - Upload audio samples with drag & drop interface
 - Rate limiting and comprehensive file validation
+- User settings management (/settings page)
+- Username/display name customization
 
 **📱 Mobile Experience**:
 - iOS-inspired interface with glassmorphism

@@ -1,36 +1,64 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SoundDrop 🎵
 
-## Getting Started
+A modern, mobile-first soundboard application built with Next.js 15, featuring beautiful iOS-inspired design, multi-sample audio playback, and privacy-first user authentication.
 
-First, run the development server:
+## ✨ Features
+
+- **🎵 Audio System**: Multi-sample playback with real-time waveform visualization
+- **🔐 Privacy-First Auth**: Google OAuth with username-based identity protection
+- **📚 Content Management**: Browse samples by category, trending algorithm, infinite scroll
+- **👤 User Features**: Favorites, library creation, audio uploads, settings management
+- **📱 Mobile Experience**: Glassmorphism UI, touch-optimized, responsive design
+
+## 🚀 Quick Start
 
 ```bash
+# Clone and install
+npm install
+
+# Set up environment (copy .env.example to .env.local)
+# Configure Supabase credentials
+
+# Initialize database
+npm run db:push
+npm run db:seed
+
+# Start development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to view the application.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🛠 Tech Stack
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Framework**: Next.js 15 (App Router, Turbopack)
+- **Frontend**: React 19, TypeScript, Tailwind CSS 4
+- **Database**: PostgreSQL with Prisma ORM
+- **Auth & Storage**: Supabase (Google OAuth, file storage)
+- **UI Components**: shadcn/ui with custom glassmorphism design
+- **State Management**: Zustand with persistence
 
-## Learn More
+## 📝 Development
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run dev          # Development server with Turbopack
+npm run build        # Production build
+npm run lint         # Code linting
+npm run db:studio    # Database browser
+npm run db:generate  # Regenerate Prisma client
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 📖 Documentation
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **CLAUDE.md**: Complete developer guide and architecture documentation
+- **docs/setup/**: Environment setup and configuration guides
+- **docs/plans/**: Implementation plans for all development phases
 
-## Deploy on Vercel
+## 🏗 Architecture
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+SoundDrop follows a modern full-stack architecture with:
+- Server-side rendering and API routes
+- Privacy-first user authentication with auto-generated usernames
+- Real-time audio visualization and multi-sample playback
+- File upload system with validation and rate limiting
+- Responsive glassmorphism design system
