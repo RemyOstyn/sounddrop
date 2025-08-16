@@ -12,10 +12,10 @@ import {
   FolderOpen, 
   Upload,
   ChevronRight,
-  Music,
   Volume2,
   Settings
 } from 'lucide-react';
+import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { useCategories } from '@/hooks/use-categories';
 import { SearchCommand } from './search-command';
@@ -66,8 +66,14 @@ export function Sidebar({ className }: SidebarProps) {
         {/* Header */}
         <div className="p-6 border-b border-white/10">
           <Link href="/" className="flex items-center space-x-3 group">
-            <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">
-              <Music size={16} className="text-white" />
+            <div className="w-8 h-8 rounded-lg overflow-hidden">
+              <Image 
+                src="/logo.webp" 
+                alt="SoundDrop" 
+                width={32} 
+                height={32} 
+                className="w-full h-full object-cover"
+              />
             </div>
             <span className="text-xl font-bold text-gradient">SoundDrop</span>
           </Link>

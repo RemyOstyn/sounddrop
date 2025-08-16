@@ -4,6 +4,7 @@ import { useState } from 'react';
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Music, TrendingUp, Clock, Users } from 'lucide-react';
+import Image from 'next/image';
 import { SampleGrid, CompactSampleGrid } from '@/components/audio/sample-grid'; // eslint-disable-line @typescript-eslint/no-unused-vars -- TODO: CompactSampleGrid will be used for featured sections
 import { ViewToggle, useViewToggle } from '@/components/shared/view-toggle';
 import { GridSkeleton } from '@/components/shared/skeleton-loader'; // eslint-disable-line @typescript-eslint/no-unused-vars -- TODO: GridSkeleton will be used for loading states
@@ -30,9 +31,20 @@ export default function HomePage() {
             transition={{ duration: 0.6 }}
             className="text-center mb-6 md:mb-12"
           >
-            <h1 className="text-4xl md:text-6xl font-bold text-gradient mb-4">
-              SoundDrop
-            </h1>
+            <div className="flex items-center justify-center space-x-4 mb-4">
+              <div className="w-12 h-12 md:w-16 md:h-16 rounded-xl overflow-hidden flex-shrink-0">
+                <Image 
+                  src="/logo.webp" 
+                  alt="SoundDrop Logo" 
+                  width={64} 
+                  height={64} 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <h1 className="text-4xl md:text-6xl font-bold text-gradient">
+                SoundDrop
+              </h1>
+            </div>
             <p className="text-xl md:text-2xl text-white/70 max-w-2xl mx-auto">
               The pocket soundboard for every moment. 
               <br className="hidden md:block" />
