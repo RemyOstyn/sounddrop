@@ -140,16 +140,25 @@ export function CreateLibrarySheet({
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent 
+        showCloseButton={false}
         className={cn(
-          "w-full max-w-full h-[90vh] max-h-[90vh] p-0 gap-0",
+          // Override base dialog styles for mobile
+          "!fixed !inset-x-0 !bottom-0 !top-auto !left-auto !right-auto",
+          "!translate-x-0 !translate-y-0 !transform-none",
+          "!max-w-none !w-full !max-h-[85vh]",
+          "!p-0 !gap-0 !m-0",
           "bg-gradient-to-br from-slate-900/95 to-gray-900/95 backdrop-blur-xl border-white/20 text-white",
-          "fixed bottom-0 left-0 right-0 top-auto translate-y-0",
-          "rounded-t-2xl rounded-b-none",
-          "data-[state=open]:slide-in-from-bottom data-[state=closed]:slide-out-to-bottom"
+          "rounded-t-2xl rounded-b-none border-b-0",
+          "data-[state=open]:slide-in-from-bottom data-[state=closed]:slide-out-to-bottom",
+          "overflow-hidden flex flex-col",
+          // Desktop styles
+          "sm:!relative sm:!h-auto sm:!max-h-[80vh] sm:!max-w-lg sm:!inset-auto",
+          "sm:!top-[50%] sm:!left-[50%] sm:!translate-x-[-50%] sm:!translate-y-[-50%]",
+          "sm:!rounded-lg sm:!border"
         )}
       >
         {/* Header */}
-        <DialogHeader className="px-6 py-4 border-b border-white/10">
+        <DialogHeader className="flex-shrink-0 px-6 py-4 border-b border-white/10">
           <div className="flex items-center justify-between">
             <DialogTitle className="flex items-center space-x-2">
               <FolderOpen size={20} />
@@ -168,7 +177,7 @@ export function CreateLibrarySheet({
         </DialogHeader>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto px-6 py-4">
+        <div className="flex-1 overflow-y-auto overscroll-contain px-6 py-4 min-h-0">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               {/* Icon Upload - Mobile Optimized */}
@@ -304,7 +313,7 @@ export function CreateLibrarySheet({
         </div>
 
         {/* Footer Actions */}
-        <div className="border-t border-white/10 p-6">
+        <div className="flex-shrink-0 border-t border-white/10 p-6">
           <div className="flex space-x-3">
             <Button
               type="button"
