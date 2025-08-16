@@ -67,7 +67,9 @@ export async function GET(
       );
     }
 
-    return NextResponse.json(library);
+    return NextResponse.json({
+      data: library
+    });
 
   } catch (error) {
     console.error('Library GET error:', error);
@@ -207,7 +209,9 @@ export async function PATCH(
       },
     });
 
-    return NextResponse.json(updatedLibrary);
+    return NextResponse.json({
+      data: updatedLibrary
+    });
 
   } catch (error) {
     console.error('Library PATCH error:', error);

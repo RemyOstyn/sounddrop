@@ -31,6 +31,7 @@ interface LibraryCardProps {
   library: LibraryWithDetails;
   view?: 'grid' | 'list';
   showActions?: boolean;
+  showCreator?: boolean;
   onClick?: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
@@ -42,6 +43,7 @@ function LibraryCardComponent({
   library,
   view = 'grid',
   showActions = true,
+  showCreator = false, // eslint-disable-line @typescript-eslint/no-unused-vars -- Will be used for future functionality
   onClick,
   onEdit,
   onDelete,

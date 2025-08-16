@@ -8,8 +8,8 @@ import {
   TrendingUp, 
   Search, 
   Heart, 
-  Settings,
-  Plus
+  Plus,
+  Layers
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
@@ -23,9 +23,9 @@ interface MobileNavProps {
 const navItems = [
   { icon: Home, label: 'Home', href: '/' },
   { icon: TrendingUp, label: 'Trending', href: '/trending' },
+  { icon: Layers, label: 'Libraries', href: '/libraries' },
   { icon: Search, label: 'Search', href: '/search', isSearch: true },
   { icon: Heart, label: 'Favorites', href: '/favorites', protected: true },
-  { icon: Settings, label: 'Settings', href: '/settings', protected: true },
 ];
 
 export function MobileNav({ className }: MobileNavProps) {

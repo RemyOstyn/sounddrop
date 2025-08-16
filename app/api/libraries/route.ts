@@ -189,7 +189,9 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json(library, { status: 201 });
+    return NextResponse.json({
+      data: library
+    }, { status: 201 });
 
   } catch (error) {
     console.error('Libraries POST error:', error);

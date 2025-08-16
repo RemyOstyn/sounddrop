@@ -13,7 +13,8 @@ import {
   Upload,
   ChevronRight,
   Volume2,
-  Settings
+  Settings,
+  Layers
 } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -31,6 +32,7 @@ interface SidebarProps {
 const mainNavItems = [
   { icon: Home, label: 'Home', href: '/' },
   { icon: TrendingUp, label: 'Trending', href: '/trending' },
+  { icon: Layers, label: 'Libraries', href: '/libraries' },
 ];
 
 const userNavItems = [

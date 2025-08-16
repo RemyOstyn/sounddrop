@@ -9,6 +9,7 @@ interface LibraryGridProps {
   libraries: LibraryWithDetails[];
   view?: 'grid' | 'list';
   showActions?: boolean;
+  showCreator?: boolean;
   onLibraryClick?: (library: LibraryWithDetails) => void;
   onLibraryEdit?: (library: LibraryWithDetails) => void;
   onLibraryDelete?: (library: LibraryWithDetails) => void;
@@ -20,6 +21,7 @@ export function LibraryGrid({
   libraries,
   view = 'grid',
   showActions = true,
+  showCreator = false,
   onLibraryClick,
   onLibraryEdit,
   onLibraryDelete,
@@ -58,7 +60,7 @@ export function LibraryGrid({
       animate="visible"
       className={cn(
         view === 'grid'
-          ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
+          ? 'grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
           : 'space-y-4',
         className
       )}
@@ -72,6 +74,7 @@ export function LibraryGrid({
             library={library}
             view={view}
             showActions={showActions}
+            showCreator={showCreator}
             onClick={() => onLibraryClick?.(library)}
             onEdit={() => onLibraryEdit?.(library)}
             onDelete={() => onLibraryDelete?.(library)}
