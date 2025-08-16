@@ -123,7 +123,7 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
   }, [debouncedQuery, performSearch]);
 
   // Handle item selection
-  const handleSelect = useCallback((result: SearchResult) => {
+  const handleSelect = useCallback((result: SearchResult, audioAction?: () => void) => {
     // Add to recent searches
     const newRecent = [query, ...recentSearches.filter(s => s !== query)].slice(0, 10);
     setRecentSearches(newRecent);
@@ -131,7 +131,10 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
     
     // Handle based on result type
     if (result.type === 'sample') {
-      // Samples don't navigate - they're handled by the play button
+      // For samples, trigger play/pause
+      if (audioAction) {
+        audioAction();
+      }
       return;
     }
     
@@ -327,7 +330,7 @@ function SearchResultItem({
   onSelect
 }: {
   result: SearchResult;
-  onSelect: (result: SearchResult) => void;
+  onSelect: (result: SearchResult, audioAction?: () => void) => void;
 }) {
   // Audio hook for samples
   const { trackPlay } = usePlayTracking();
@@ -343,8 +346,10 @@ function SearchResultItem({
   const isSample = result.type === 'sample';
   const showPlayButton = isSample && result.fileUrl;
 
-  const handlePlayToggle = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handlePlayToggle = (e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+    }
     if (audioHook.isPlaying) {
       audioHook.pause();
     } else {
@@ -355,7 +360,7 @@ function SearchResultItem({
   return (
     <CommandItem
       value={result.title}
-      onSelect={() => onSelect(result)}
+      onSelect={() => onSelect(result, isSample ? handlePlayToggle : undefined)}
       className="flex items-center space-x-3 p-3 hover:bg-white/5 cursor-pointer group"
     >
       <motion.div
@@ -379,7 +384,7 @@ function SearchResultItem({
       
       {showPlayButton && (
         <motion.button
-          onClick={handlePlayToggle}
+          onClick={(e) => handlePlayToggle(e)}
           className="flex-shrink-0 w-8 h-8 rounded-full bg-purple-500/20 hover:bg-purple-500/30 flex items-center justify-center transition-colors"
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}

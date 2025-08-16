@@ -53,6 +53,14 @@ export function SampleCard({
     onFavoriteToggle?.(sample.id, !isUserFavorited);
   };
 
+  const handleCardClick = () => {
+    if (isPlaying) {
+      pause();
+    } else {
+      play();
+    }
+  };
+
   if (view === 'list') {
     return <ListSampleCard {...{
       sample,
@@ -68,6 +76,7 @@ export function SampleCard({
       showFavoriteCount,
       isUserFavorited,
       handleFavoriteToggle,
+      handleCardClick,
       className
     }} />;
   }
@@ -84,6 +93,7 @@ export function SampleCard({
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -4 }}
       transition={{ duration: 0.3 }}
+      onClick={handleCardClick}
     >
       {/* Background gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -220,6 +230,7 @@ function ListSampleCard({
   showFavoriteCount,
   isUserFavorited,
   handleFavoriteToggle,
+  handleCardClick,
   className
 }: {
   sample: SampleWithDetails;
@@ -235,12 +246,13 @@ function ListSampleCard({
   showFavoriteCount: boolean;
   isUserFavorited: boolean;
   handleFavoriteToggle: () => void;
+  handleCardClick: () => void;
   className?: string;
 }) {
   return (
     <motion.div
       className={cn(
-        'group relative overflow-hidden rounded-lg glass glass-hover',
+        'group relative overflow-hidden rounded-lg glass glass-hover cursor-pointer',
         'p-3 flex items-center space-x-3 min-h-[60px]',
         className
       )}
@@ -249,6 +261,7 @@ function ListSampleCard({
       animate={{ opacity: 1, x: 0 }}
       whileHover={{ x: 4 }}
       transition={{ duration: 0.3 }}
+      onClick={handleCardClick}
     >
       {/* Play button */}
       <CompactPlayButton

@@ -43,7 +43,8 @@ export function PlayButton({
   disabled = false,
   showPulse = true
 }: PlayButtonProps) {
-  const handleClick = () => {
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (disabled || isLoading) return;
     
     if (isPlaying) {
